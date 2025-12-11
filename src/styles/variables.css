@@ -1,0 +1,64 @@
+/* SOANTA Brand Color Palette */
+:root {
+  /* Couleurs principales */
+  --color-orange: #E8A33C;
+  --color-green: #5B9A3D;
+  --color-brown: #6B5E4F;
+  --color-white: #FFFFFF;
+  
+  /* Couleurs dérivées */
+  --color-orange-light: #F5C77A;
+  --color-orange-dark: #C98A2E;
+  --color-green-light: #7AB85A;
+  --color-green-dark: #4A7D31;
+  --color-brown-light: #8A7A6A;
+  --color-brown-dark: #4D4339;
+  
+  /* Couleurs de fond */
+  --bg-primary: var(--color-white);
+  --bg-secondary: #F5F3F0;
+  --bg-dark: var(--color-brown);
+  
+  /* Couleurs de texte */
+  --text-primary: var(--color-brown-dark);
+  --text-secondary: var(--color-brown);
+  --text-light: var(--color-white);
+  --text-accent: var(--color-orange);
+  
+  /* Typographie */
+  --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-heading: 'Playfair Display', Georgia, serif;
+  
+  /* Espacements */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+  --spacing-3xl: 4rem;
+  
+  /* Breakpoints */
+  --breakpoint-mobile: 320px;
+  --breakpoint-tablet: 768px;
+  --breakpoint-desktop: 1024px;
+  --breakpoint-large: 1440px;
+  --breakpoint-xlarge: 2560px;
+  
+  /* Transitions */
+  --transition-fast: 150ms ease-in-out;
+  --transition-normal: 300ms ease-in-out;
+  --transition-slow: 500ms ease-in-out;
+  
+  /* Ombres */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+  
+  /* Border radius */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 1rem;
+  --radius-full: 9999px;
+}

@@ -1,0 +1,127 @@
+.about {
+  padding: var(--spacing-3xl) 0;
+  background-color: var(--bg-secondary);
+}
+
+.about__container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-lg);
+}
+
+.about__content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--spacing-2xl);
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+.about__content--visible {
+  animation: fadeInUp var(--transition-slow) forwards;
+}
+
+.about__text {
+  background-color: var(--color-white);
+  padding: var(--spacing-2xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.about__subtitle {
+  font-family: var(--font-family-heading);
+  font-size: 1.25rem;
+  color: var(--color-brown-dark);
+  margin: var(--spacing-lg) 0 var(--spacing-sm) 0;
+}
+
+.about__subtitle:first-child {
+  margin-top: 0;
+}
+
+.about__text p {
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+.about__text p:last-child {
+  margin-bottom: 0;
+}
+
+.about__text strong {
+  color: var(--color-brown-dark);
+}
+
+.about__text em {
+  color: var(--color-orange);
+  font-style: normal;
+  font-weight: 600;
+}
+
+.about__stats {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-lg);
+}
+
+.about__stat {
+  background-color: var(--color-white);
+  padding: var(--spacing-lg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  text-align: center;
+  border-left: 4px solid var(--color-orange);
+}
+
+.about__stat-number {
+  display: block;
+  font-family: var(--font-family-heading);
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: var(--color-green);
+  margin-bottom: var(--spacing-xs);
+}
+
+.about__stat-label {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .about__content {
+    grid-template-columns: 1fr;
+  }
+
+  .about__stats {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .about__stat {
+    flex: 1 1 calc(50% - var(--spacing-md));
+    min-width: 140px;
+  }
+}
+
+@media (max-width: 768px) {
+  .about {
+    padding: var(--spacing-2xl) 0;
+  }
+
+  .about__text {
+    padding: var(--spacing-lg);
+  }
+
+  .about__stat {
+    flex: 1 1 100%;
+  }
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
