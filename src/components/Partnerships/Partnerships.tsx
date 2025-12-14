@@ -1,7 +1,7 @@
 import SectionTitle from '../shared/SectionTitle'
 import Card from '../shared/Card'
 import useIntersectionObserver from '../../hooks/useIntersectionObserver'
-import { partnerships, keyAdvantages } from '../../data/partnerships'
+import { partnerships } from '../../data/partnerships'
 import './Partnerships.css'
 
 export default function Partnerships() {
@@ -32,14 +32,7 @@ export default function Partnerships() {
           ))}
         </div>
 
-        <div className={`partnerships__advantages ${isVisible ? 'partnerships__advantages--visible' : ''}`}>
-          {keyAdvantages.map((advantage, index) => (
-            <div key={index} className="partnerships__advantage">
-              <span className="partnerships__advantage-icon">✓</span>
-              <span className="partnerships__advantage-text">{advantage}</span>
-            </div>
-          ))}
-        </div>
+
       </div>
     </section>
   )

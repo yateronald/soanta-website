@@ -2,6 +2,13 @@ import SectionTitle from '../shared/SectionTitle'
 import useIntersectionObserver from '../../hooks/useIntersectionObserver'
 import './About.css'
 
+const stats = [
+  { value: '2022', label: 'Année de création', icon: '📅' },
+  { value: 'San Pedro', label: 'Hub portuaire', icon: '🌍' },
+  { value: '3', label: 'Produits phares', icon: '🌱' },
+  { value: '100%', label: 'Traçabilité', icon: '✓' },
+]
+
 export default function About() {
   const { ref, isVisible } = useIntersectionObserver<HTMLElement>({ threshold: 0.1 })
 
@@ -13,7 +20,24 @@ export default function About() {
           subtitle="Notre mission : valoriser les ressources agricoles ouest-africaines"
         />
         
-        <div className={`about__content ${isVisible ? 'about__content--visible' : ''}`}>
+        {/* Two Column Layout: Stats + Text */}
+        <div className={`about__grid ${isVisible ? 'about__grid--visible' : ''}`}>
+          {/* Left: Stats Panel */}
+          <div className="about__stats-wrapper">
+            {stats.map((stat, index) => (
+              <div key={index} className="about__stat-card">
+                <div className="about__stat-icon-wrapper">
+                  <span className="about__stat-icon">{stat.icon}</span>
+                </div>
+                <div className="about__stat-content">
+                  <span className="about__stat-value">{stat.value}</span>
+                  <span className="about__stat-label">{stat.label}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          {/* Right: Text Content */}
           <div className="about__text">
             <div className="about__section">
               <h3 className="about__subtitle">Notre Histoire</h3>
@@ -39,8 +63,6 @@ export default function About() {
               </p>
             </div>
           </div>
-          
-
         </div>
       </div>
     </section>
