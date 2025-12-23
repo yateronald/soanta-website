@@ -8,6 +8,8 @@ interface SEOProps {
   canonicalUrl?: string
 }
 
+const SITE_URL = 'https://soanta-website.vercel.app'
+
 const defaultKeywords = [
   'cacao Côte d\'Ivoire',
   'noix de cajou export',
@@ -23,8 +25,8 @@ export default function SEO({
   title = 'SOANTA - Racines d\'Afrique, saveurs du monde',
   description = 'SOANTA - Société Ouest Africaine de Négoce et de Transformation Agricole. Valorisation des ressources agricoles ouest-africaines : cacao, noix de cajou, café. Export depuis San Pedro, Côte d\'Ivoire.',
   keywords = defaultKeywords,
-  ogImage = '/images/logo.png',
-  canonicalUrl = 'https://soanta.com'
+  ogImage = `${SITE_URL}/images/Cacao.png`,
+  canonicalUrl = SITE_URL
 }: SEOProps) {
   return (
     <Helmet>
@@ -38,6 +40,10 @@ export default function SEO({
       <meta property="og:title" content={title} />
       <meta property="og:description" content={description} />
       <meta property="og:image" content={ogImage} />
+      <meta property="og:image:width" content="1200" />
+      <meta property="og:image:height" content="630" />
+      <meta property="og:image:alt" content={title} />
+      <meta property="og:image:secure_url" content={ogImage} />
       <meta property="og:url" content={canonicalUrl} />
       <meta property="og:type" content="website" />
       <meta property="og:locale" content="fr_FR" />
