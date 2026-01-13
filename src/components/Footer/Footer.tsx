@@ -75,6 +75,15 @@ export default function Footer() {
             <a href="#politique-confidentialite" className="footer__link">Politique de confidentialité</a>
           </nav>
         </div>
+
+        <div className="footer__credit-bar">
+          <p className="footer__credit-left">
+            © {currentYear} Pôle Agricole. Tous droits réservés.
+          </p>
+          <p className="footer__credit-right">
+            Conception : African wind gate .
+          </p>
+        </div>
       </div>
     </footer>
   )
