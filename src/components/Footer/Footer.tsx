@@ -70,18 +70,8 @@ export default function Footer() {
           <p className="footer__copyright">
             © {currentYear} SOANTA - Société Ouest Africaine de Négoce et de Transformation Agricole. Tous droits réservés.
           </p>
-          <nav className="footer__links" aria-label="Liens légaux">
-            <a href="#mentions-legales" className="footer__link">Mentions légales</a>
-            <a href="#politique-confidentialite" className="footer__link">Politique de confidentialité</a>
-          </nav>
-        </div>
-
-        <div className="footer__credit-bar">
-          <p className="footer__credit-left">
-            © {currentYear} Pôle Agricole. Tous droits réservés.
-          </p>
-          <p className="footer__credit-right">
-            Conception : African wind gate .
+          <p className="footer__conception">
+            Conception : African wind gate
           </p>
         </div>
       </div>

@@ -6,6 +6,8 @@ import useFormValidation from '../../hooks/useFormValidation'
 import type { ContactFormData } from '../../hooks/useFormValidation'
 import './ContactForm.css'
 
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002/api'
+
 const partnershipTypes = [
   { value: '', label: 'Sélectionnez un type de partenariat' },
   { value: 'co-investissement', label: 'Co-investissement' },
@@ -19,61 +21,70 @@ export default function ContactForm() {
   const [formData, setFormData] = useState<ContactFormData>({
     nom: '',
     email: '',
+    telephone: '',
     entreprise: '',
     typePartenariat: '',
     message: ''
   })
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [isSubmitted, setIsSubmitted] = useState(false)
+  const [showSuccessModal, setShowSuccessModal] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
   
   const { validate, getFieldError, clearErrors } = useFormValidation()
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+    setSubmitError(null)
   }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
+    setSubmitError(null)
     
     const result = validate(formData)
     
     if (result.isValid) {
       setIsSubmitting(true)
       
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      setIsSubmitting(false)
-      setIsSubmitted(true)
-      
-      // Reset form
-      setFormData({
-        nom: '',
-        email: '',
-        entreprise: '',
-        typePartenariat: '',
-        message: ''
-      })
-      clearErrors()
+      try {
+        const response = await fetch(`${API_BASE_URL}/demandes`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(formData),
+        })
+
+        const data = await response.json()
+
+        if (response.ok && data.success) {
+          // Show loading for 3 seconds before displaying success modal
+          await new Promise(resolve => setTimeout(resolve, 3000))
+          setIsSubmitting(false)
+          setShowSuccessModal(true)
+          setFormData({
+            nom: '',
+            email: '',
+            telephone: '',
+            entreprise: '',
+            typePartenariat: '',
+            message: ''
+          })
+          clearErrors()
+        } else {
+          setIsSubmitting(false)
+          setSubmitError(data.error?.message || 'Une erreur est survenue. Veuillez réessayer.')
+        }
+      } catch {
+        setIsSubmitting(false)
+        setSubmitError('Impossible de contacter le serveur. Veuillez réessayer plus tard.')
+      }
     }
   }
 
-  if (isSubmitted) {
-    return (
-      <section id="contact" className="contact-form">
-        <div className="contact-form__container">
-          <div className="contact-form__success">
-            <span className="contact-form__success-icon">✓</span>
-            <h3>Message envoyé avec succès !</h3>
-            <p>Merci pour votre intérêt. Notre équipe vous contactera dans les plus brefs délais.</p>
-            <Button onClick={() => setIsSubmitted(false)}>
-              Envoyer un autre message
-            </Button>
-          </div>
-        </div>
-      </section>
-    )
+  const closeSuccessModal = () => {
+    setShowSuccessModal(false)
   }
 
   return (
@@ -85,6 +96,11 @@ export default function ContactForm() {
         />
         
         <form className="contact-form__form" onSubmit={handleSubmit} noValidate>
+          {submitError && (
+            <div className="contact-form__submit-error" role="alert">
+              {submitError}
+            </div>
+          )}
           <div className="contact-form__row">
             <div className="contact-form__field">
               <label htmlFor="nom" className="contact-form__label">
@@ -100,6 +116,7 @@ export default function ContactForm() {
                 aria-label="Votre nom"
                 aria-describedby={getFieldError('nom') ? 'nom-error' : undefined}
                 aria-invalid={!!getFieldError('nom')}
+                disabled={isSubmitting}
               />
               {getFieldError('nom') && (
                 <span id="nom-error" className="contact-form__error" role="alert">
@@ -122,6 +139,7 @@ export default function ContactForm() {
                 aria-label="Votre adresse email"
                 aria-describedby={getFieldError('email') ? 'email-error' : undefined}
                 aria-invalid={!!getFieldError('email')}
+                disabled={isSubmitting}
               />
               {getFieldError('email') && (
                 <span id="email-error" className="contact-form__error" role="alert">
@@ -132,6 +150,23 @@ export default function ContactForm() {
           </div>
 
           <div className="contact-form__row">
+            <div className="contact-form__field">
+              <label htmlFor="telephone" className="contact-form__label">
+                Téléphone
+              </label>
+              <input
+                type="tel"
+                id="telephone"
+                name="telephone"
+                value={formData.telephone}
+                onChange={handleChange}
+                className="contact-form__input"
+                aria-label="Votre numéro de téléphone"
+                placeholder="+33 6 12 34 56 78"
+                disabled={isSubmitting}
+              />
+            </div>
+
             <div className="contact-form__field">
               <label htmlFor="entreprise" className="contact-form__label">
                 Entreprise
@@ -144,9 +179,12 @@ export default function ContactForm() {
                 onChange={handleChange}
                 className="contact-form__input"
                 aria-label="Nom de votre entreprise"
+                disabled={isSubmitting}
               />
             </div>
+          </div>
 
+          <div className="contact-form__row">
             <div className="contact-form__field">
               <label htmlFor="typePartenariat" className="contact-form__label">
                 Type de partenariat
@@ -158,6 +196,7 @@ export default function ContactForm() {
                 onChange={handleChange}
                 className="contact-form__select"
                 aria-label="Type de partenariat souhaité"
+                disabled={isSubmitting}
               >
                 {partnershipTypes.map(type => (
                   <option key={type.value} value={type.value}>
@@ -182,6 +221,7 @@ export default function ContactForm() {
               aria-label="Votre message"
               aria-describedby={getFieldError('message') ? 'message-error' : undefined}
               aria-invalid={!!getFieldError('message')}
+              disabled={isSubmitting}
             />
             {getFieldError('message') && (
               <span id="message-error" className="contact-form__error" role="alert">
@@ -197,10 +237,46 @@ export default function ContactForm() {
               disabled={isSubmitting}
               aria-label="Envoyer le formulaire de contact"
             >
-              {isSubmitting ? 'Envoi en cours...' : 'Envoyer'}
+              {isSubmitting ? (
+                <span className="contact-form__button-loading">
+                  <span className="contact-form__spinner"></span>
+                  Envoi en cours...
+                </span>
+              ) : 'Envoyer'}
             </Button>
           </div>
         </form>
+
+        {/* Loading Overlay */}
+        {isSubmitting && (
+          <div className="contact-form__loading-overlay">
+            <div className="contact-form__loading-content">
+              <div className="contact-form__loading-spinner"></div>
+              <p>Envoi de votre message...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Success Modal */}
+        {showSuccessModal && (
+          <div className="contact-form__modal-overlay" onClick={closeSuccessModal}>
+            <div className="contact-form__modal" onClick={(e) => e.stopPropagation()}>
+              <div className="contact-form__modal-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" strokeLinecap="round" strokeLinejoin="round"/>
+                  <polyline points="22,4 12,14.01 9,11.01" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <h3 className="contact-form__modal-title">Message envoyé avec succès !</h3>
+              <p className="contact-form__modal-text">
+                Merci pour votre message. Un membre de notre équipe vous contactera dans les plus brefs délais.
+              </p>
+              <Button onClick={closeSuccessModal} size="large">
+                Fermer
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </section>
   )

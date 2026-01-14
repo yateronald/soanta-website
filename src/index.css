@@ -55,6 +55,14 @@ button {
   background-color: #1a1a1a;
   cursor: pointer;
   transition: border-color 0.25s;
+  color: inherit;
+}
+
+/* Ensure SVG icons in buttons are visible */
+button svg {
+  display: inline-block;
+  vertical-align: middle;
+  pointer-events: none;
 }
 button:hover {
   border-color: #646cff;

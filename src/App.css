@@ -27,6 +27,12 @@ img {
   height: auto;
 }
 
+/* Ensure SVGs are visible */
+svg {
+  display: inline-block;
+  vertical-align: middle;
+}
+
 a {
   color: inherit;
   text-decoration: none;

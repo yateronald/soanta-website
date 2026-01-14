@@ -13,6 +13,7 @@ export interface ValidationResult {
 export interface ContactFormData {
   nom: string
   email: string
+  telephone: string
   entreprise: string
   typePartenariat: string
   message: string
