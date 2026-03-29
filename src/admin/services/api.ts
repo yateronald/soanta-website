@@ -9,7 +9,7 @@ import type {
   DemandeStatus
 } from '../types/admin';
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://soanta-api.onrender.com/api';
 
 class ApiService {
   private getToken(): string | null {
