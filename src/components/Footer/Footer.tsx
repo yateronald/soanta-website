@@ -42,7 +42,7 @@ export default function Footer() {
               <p>
                 <span aria-hidden="true">📍</span> Lotissement Corniche, Quartier Balmer
               </p>
-              <p>San Pedro, Côte d'Ivoire s</p>
+              <p>San Pedro, Côte d'Ivoire</p>
               <p>
                 <span aria-hidden="true">📮</span> 26 BP 944 Abidjan 26
               </p>
