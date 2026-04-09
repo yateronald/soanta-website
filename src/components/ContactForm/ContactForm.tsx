@@ -6,7 +6,7 @@ import useFormValidation from '../../hooks/useFormValidation'
 import type { ContactFormData } from '../../hooks/useFormValidation'
 import './ContactForm.css'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://soanta-api.onrender.com/api'
 
 const partnershipTypes = [
   { value: '', label: 'Sélectionnez un type de partenariat' },
