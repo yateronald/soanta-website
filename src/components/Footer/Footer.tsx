@@ -77,14 +77,18 @@ export default function Footer() {
                 <ul className="footer__list">
                   {partners.map((partner) => (
                     <li key={partner.id}>
-                      <a
-                        href={partner.url}
-                        className="footer__link"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {partner.name}
-                      </a>
+                      {partner.url ? (
+                        <a
+                          href={partner.url}
+                          className="footer__link"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          {partner.name}
+                        </a>
+                      ) : (
+                        partner.name
+                      )}
                     </li>
                   ))}
                 </ul>

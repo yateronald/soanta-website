@@ -8,7 +8,7 @@ export interface Partner {
   id: string
   name: string
   logo: string
-  url: string
+  url?: string
 }
 
 export const partnerships: Partnership[] = [
@@ -34,7 +34,7 @@ export const partnerships: Partnership[] = [
   }
 ]
 
-// Partner logos shown in the Partnerships section; each logo links to the partner's website.
+// Partner logos shown in the Partnerships section; a logo links to the partner's website when `url` is set.
 // Logos are displayed on a dark background, so use a light (white) version.
 export const partners: Partner[] = [
   {
@@ -42,6 +42,11 @@ export const partners: Partner[] = [
     name: 'Kjøller',
     logo: '/images/partners/kjoller-light.png',
     url: 'https://kjoller.com/default.asp'
+  },
+  {
+    id: 'anhui',
+    name: 'Anhui Import And Export Co., Ltd.',
+    logo: '/images/partners/anhui-light.png'
   }
 ]
 

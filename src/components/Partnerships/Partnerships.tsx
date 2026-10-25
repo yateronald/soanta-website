@@ -52,24 +52,35 @@ export default function Partnerships() {
             <ul className="partners__list">
               {partners.map((partner) => (
                 <li key={partner.id}>
-                  <a
-                    href={partner.url}
-                    className="partners__link"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    aria-label={`${partner.name} — visiter le site (nouvel onglet)`}
-                  >
-                    <img
-                      src={partner.logo}
-                      alt={`Logo ${partner.name}`}
-                      className="partners__logo"
-                      loading="lazy"
-                    />
-                    <span className="partners__domain">
-                      {displayDomain(partner.url)}
-                      <ArrowUpRight size={14} strokeWidth={2} aria-hidden="true" />
-                    </span>
-                  </a>
+                  {partner.url ? (
+                    <a
+                      href={partner.url}
+                      className="partners__link"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={`${partner.name} — visiter le site (nouvel onglet)`}
+                    >
+                      <img
+                        src={partner.logo}
+                        alt={`Logo ${partner.name}`}
+                        className="partners__logo"
+                        loading="lazy"
+                      />
+                      <span className="partners__domain">
+                        {displayDomain(partner.url)}
+                        <ArrowUpRight size={14} strokeWidth={2} aria-hidden="true" />
+                      </span>
+                    </a>
+                  ) : (
+                    <div className="partners__link partners__link--static">
+                      <img
+                        src={partner.logo}
+                        alt={`Logo ${partner.name}`}
+                        className="partners__logo"
+                        loading="lazy"
+                      />
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
