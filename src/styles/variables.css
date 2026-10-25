@@ -1,34 +1,55 @@
-/* SOANTA Brand Color Palette */
+/* SOANTA — Design tokens */
 :root {
-  /* Couleurs principales */
+  /* Palette de marque (tirée du logo) */
   --color-orange: #E8A33C;
-  --color-green: #5B9A3D;
-  --color-brown: #6B5E4F;
+  --color-green: #4F8A34;
+  --color-brown: #574C43;
   --color-white: #FFFFFF;
-  
-  /* Couleurs dérivées */
-  --color-orange-light: #F5C77A;
-  --color-orange-dark: #C98A2E;
-  --color-green-light: #7AB85A;
-  --color-green-dark: #4A7D31;
-  --color-brown-light: #8A7A6A;
-  --color-brown-dark: #4D4339;
-  
-  /* Couleurs de fond */
-  --bg-primary: var(--color-white);
-  --bg-secondary: #F5F3F0;
-  --bg-dark: var(--color-brown);
-  
-  /* Couleurs de texte */
+
+  --color-orange-light: #F2C57C;
+  --color-orange-dark: #B9781F;
+  --color-green-light: #74A957;
+  --color-green-dark: #3B6A26;
+  --color-brown-light: #8A7D70;
+  --color-brown-dark: #241C16;
+
+  /* Neutres chauds */
+  --cocoa-950: #17110D;
+  --cocoa-900: #211912;
+  --cocoa-800: #2C221A;
+  --cocoa-700: #3B2F25;
+  --sand-50: #FBF8F3;
+  --sand-100: #F4EEE4;
+  --sand-200: #E8DFD1;
+  --sand-300: #D6C9B6;
+
+  /* Rôles */
+  --bg-primary: var(--sand-50);
+  --bg-secondary: var(--sand-100);
+  --bg-dark: var(--cocoa-900);
+
   --text-primary: var(--color-brown-dark);
-  --text-secondary: var(--color-brown);
-  --text-light: var(--color-white);
-  --text-accent: var(--color-orange);
-  
+  --text-secondary: #685C51;
+  --text-light: #F6F1E9;
+  --text-light-muted: rgba(246, 241, 233, 0.68);
+  --text-accent: var(--color-orange-dark);
+
+  --line: rgba(36, 28, 22, 0.12);
+  --line-strong: rgba(36, 28, 22, 0.22);
+  --line-light: rgba(246, 241, 233, 0.14);
+
   /* Typographie */
-  --font-family-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-family-heading: 'Playfair Display', Georgia, serif;
-  
+  --font-family-primary: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-heading: 'Fraunces', Georgia, 'Times New Roman', serif;
+
+  --fs-eyebrow: 0.75rem;
+  --fs-small: 0.875rem;
+  --fs-body: 1rem;
+  --fs-lead: clamp(1.05rem, 0.98rem + 0.3vw, 1.2rem);
+  --fs-h3: clamp(1.35rem, 1.2rem + 0.5vw, 1.6rem);
+  --fs-h2: clamp(2rem, 1.5rem + 2vw, 3.25rem);
+  --fs-h1: clamp(2.6rem, 1.6rem + 4.4vw, 5.5rem);
+
   /* Espacements */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -37,28 +58,31 @@
   --spacing-xl: 2rem;
   --spacing-2xl: 3rem;
   --spacing-3xl: 4rem;
-  
-  /* Breakpoints */
+  --section-y: clamp(4.5rem, 3rem + 6vw, 8.5rem);
+  --gutter: clamp(1.25rem, 0.5rem + 3vw, 3rem);
+  --container: 1240px;
+
+  /* Breakpoints (référence) */
   --breakpoint-mobile: 320px;
   --breakpoint-tablet: 768px;
   --breakpoint-desktop: 1024px;
   --breakpoint-large: 1440px;
-  --breakpoint-xlarge: 2560px;
-  
-  /* Transitions */
-  --transition-fast: 150ms ease-in-out;
-  --transition-normal: 300ms ease-in-out;
-  --transition-slow: 500ms ease-in-out;
-  
-  /* Ombres */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
-  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
-  
-  /* Border radius */
-  --radius-sm: 0.25rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 1rem;
+
+  /* Mouvement */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --transition-fast: 160ms var(--ease-out);
+  --transition-normal: 320ms var(--ease-out);
+  --transition-slow: 700ms var(--ease-out);
+
+  /* Ombres (utilisées aussi par l'admin) */
+  --shadow-sm: 0 1px 2px rgba(23, 17, 13, 0.06);
+  --shadow-md: 0 6px 18px -8px rgba(23, 17, 13, 0.18);
+  --shadow-lg: 0 18px 40px -18px rgba(23, 17, 13, 0.28);
+  --shadow-xl: 0 30px 60px -24px rgba(23, 17, 13, 0.35);
+
+  /* Rayons */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
   --radius-full: 9999px;
 }

@@ -17,10 +17,10 @@ export default function Button({
   ...props
 }: ButtonProps) {
   const classNames = [
-    'btn',
-    `btn--${variant}`,
-    `btn--${size}`,
-    fullWidth ? 'btn--full-width' : '',
+    'ui-btn',
+    `ui-btn--${variant}`,
+    `ui-btn--${size}`,
+    fullWidth ? 'ui-btn--full-width' : '',
     className
   ].filter(Boolean).join(' ')
 

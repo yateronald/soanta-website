@@ -1,9 +1,10 @@
 // Centralized asset paths for easy management
 // Import images from src/assets for Vite bundling
 
-import cacaoImg from '../assets/Cacao.png'
-import cajouImg from '../assets/Cajou.png'
-import cafeImg from '../assets/cafe.png'
+import cacaoImg from '../assets/cacao-card.webp'
+import cajouImg from '../assets/cajou-card.webp'
+import cafeImg from '../assets/cafe-card.webp'
+import cajouWideImg from '../assets/cajou-wide.webp'
 
 // Product images
 export const productImages = {
@@ -12,11 +13,15 @@ export const productImages = {
   cafe: cafeImg,
 } as const
 
-// Logo
-export const logo = '/images/logo.png'
+// Editorial image used in the About section
+export const aboutImage = cajouWideImg
 
-// Hero background (placeholder - can be updated when available)
-export const heroBackground = '/images/hero-bg.webp'
+// Logo (original banner, and the light version used on dark backgrounds)
+export const logo = '/images/logo.png'
+export const logoLight = '/images/logo-light.png'
+
+// Hero background
+export const heroBackground = '/images/hero-cacao.webp'
 
 // Export all assets
 export const assets = {

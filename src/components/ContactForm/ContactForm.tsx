@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import SectionTitle from '../shared/SectionTitle'
+import { ArrowRight } from 'lucide-react'
 import Button from '../shared/Button'
 import useFormValidation from '../../hooks/useFormValidation'
 import type { ContactFormData } from '../../hooks/useFormValidation'
 import './ContactForm.css'
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://soanta-api.onrender.com/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://soanta-api-cfir.onrender.com/api'
 
 const partnershipTypes = [
   { value: '', label: 'Sélectionnez un type de partenariat' },
@@ -89,13 +89,51 @@ export default function ContactForm() {
 
   return (
     <section id="contact" className="contact-form">
-      <div className="contact-form__container">
-        <SectionTitle 
-          title="Contactez-nous" 
-          subtitle="Vous souhaitez devenir partenaire ? Remplissez le formulaire ci-dessous"
-        />
-        
+      <div className="contact-form__container container">
+        <aside className="contact-form__aside">
+          <p className="eyebrow eyebrow--light">Contact</p>
+          <h2 className="contact-form__title">Parlons de votre projet.</h2>
+          <p className="contact-form__intro">
+            Vous souhaitez devenir partenaire, sécuriser un approvisionnement ou investir dans la
+            filière ? Écrivez-nous, notre équipe vous répond rapidement.
+          </p>
+
+          <dl className="contact-form__details">
+            <div>
+              <dt>Siège</dt>
+              <dd>
+                Lotissement Corniche, Quartier Balmer
+                <br />
+                San Pedro, Côte d'Ivoire
+              </dd>
+            </div>
+            <div>
+              <dt>Courrier</dt>
+              <dd>26 BP 944 Abidjan 26</dd>
+            </div>
+            <div>
+              <dt>Langues</dt>
+              <dd>Français, English</dd>
+            </div>
+          </dl>
+
+          <div className="contact-form__map">
+            <iframe
+              src="https://www.openstreetmap.org/export/embed.html?bbox=-6.65%2C4.72%2C-6.60%2C4.77&layer=mapnik&marker=4.7485%2C-6.6363"
+              width="100%"
+              height="180"
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Localisation SOANTA à San Pedro, Côte d'Ivoire"
+            />
+          </div>
+        </aside>
+
         <form className="contact-form__form" onSubmit={handleSubmit} noValidate>
+          <h3 className="contact-form__form-title">Demande de partenariat</h3>
+          <p className="contact-form__form-note">
+            Les champs marqués d'un <span className="contact-form__required">*</span> sont obligatoires.
+          </p>
           {submitError && (
             <div className="contact-form__submit-error" role="alert">
               {submitError}
@@ -162,7 +200,7 @@ export default function ContactForm() {
                 onChange={handleChange}
                 className="contact-form__input"
                 aria-label="Votre numéro de téléphone"
-                placeholder="+33 6 12 34 56 78"
+                placeholder="+225 07 00 00 00 00"
                 disabled={isSubmitting}
               />
             </div>
@@ -233,6 +271,7 @@ export default function ContactForm() {
           <div className="contact-form__submit">
             <Button 
               type="submit" 
+              variant="secondary"
               size="large"
               disabled={isSubmitting}
               aria-label="Envoyer le formulaire de contact"
@@ -242,7 +281,12 @@ export default function ContactForm() {
                   <span className="contact-form__spinner"></span>
                   Envoi en cours...
                 </span>
-              ) : 'Envoyer'}
+              ) : (
+                <>
+                  Envoyer la demande
+                  <ArrowRight size={18} strokeWidth={2} aria-hidden="true" />
+                </>
+              )}
             </Button>
           </div>
         </form>
@@ -271,7 +315,7 @@ export default function ContactForm() {
               <p className="contact-form__modal-text">
                 Merci pour votre message. Un membre de notre équipe vous contactera dans les plus brefs délais.
               </p>
-              <Button onClick={closeSuccessModal} size="large">
+              <Button onClick={closeSuccessModal} variant="secondary" size="large">
                 Fermer
               </Button>
             </div>

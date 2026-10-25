@@ -1,124 +1,62 @@
-import { useState } from 'react'
 import SectionTitle from '../shared/SectionTitle'
 import useIntersectionObserver from '../../hooks/useIntersectionObserver'
 import { products } from '../../data/products'
 import './Products.css'
 
 export default function Products() {
-  const [activeIndex, setActiveIndex] = useState(0)
   const { ref, isVisible } = useIntersectionObserver<HTMLElement>({ threshold: 0.1 })
 
-  const handlePrev = () => {
-    setActiveIndex((prev) => (prev === 0 ? products.length - 1 : prev - 1))
-  }
-
-  const handleNext = () => {
-    setActiveIndex((prev) => (prev === products.length - 1 ? 0 : prev + 1))
-  }
-
   return (
-    <section id="produits" className="products" ref={ref}>
-      <div className="products__container">
-        <SectionTitle 
-          title="Nos Produits Premium" 
-          subtitle="Des produits agricoles de qualité exceptionnelle, traçables de la source à l'export"
+    <section id="produits" className={`products ${isVisible ? 'is-visible' : ''}`} ref={ref}>
+      <div className="container">
+        <SectionTitle
+          eyebrow="Nos filières"
+          title="Trois produits, une même exigence de qualité à l'origine."
+          subtitle="Des produits agricoles sélectionnés en Côte d'Ivoire, traçables de la source à l'export et expédiés depuis le port de San Pedro."
         />
-        
-        {/* Desktop Grid */}
-        <div className={`products__grid ${isVisible ? 'products__grid--visible' : ''}`}>
+
+        <div className="products__grid" role="list">
           {products.map((product, index) => (
-            <article 
-              key={product.id} 
-              className="products__card"
-              style={{ animationDelay: `${index * 150}ms` }}
+            <article
+              key={product.id}
+              className="products__card reveal"
+              role="listitem"
+              style={{ '--delay': `${index * 120}ms` } as React.CSSProperties}
             >
-              <div className="products__image-wrapper">
-                <img 
-                  src={product.image} 
-                  alt={`${product.name} - Produit premium de ${product.origin}`}
+              <div className="products__media">
+                <img
+                  src={product.image}
+                  alt={`${product.name} de ${product.origin} en séchage`}
                   className="products__image"
                   loading="lazy"
+                  width={900}
+                  height={650}
                 />
-                <div className="products__badges">
-                  {product.badges.map((badge, i) => (
-                    <span key={i} className="products__badge">{badge}</span>
-                  ))}
-                </div>
+                <span className="products__index" aria-hidden="true">
+                  {String(index + 1).padStart(2, '0')}
+                </span>
               </div>
-              <div className="products__content">
+              <div className="products__body">
+                <p className="products__latin">{product.botanicalName}</p>
                 <h3 className="products__name">{product.name}</h3>
                 <p className="products__description">{product.description}</p>
-                <div className="products__traceability">
-                  <span className="products__origin">
-                    🇨🇮 Origine: {product.origin} / {product.region}
-                  </span>
-                  {product.traceability && (
-                    <span className="products__trace-badge">✓ Traçabilité garantie</span>
-                  )}
-                </div>
+                <dl className="products__meta">
+                  <div>
+                    <dt>Origine</dt>
+                    <dd>{product.origin}</dd>
+                  </div>
+                  <div>
+                    <dt>Départ</dt>
+                    <dd>Port de {product.region}</dd>
+                  </div>
+                  <div>
+                    <dt>Engagement</dt>
+                    <dd>{product.highlight}</dd>
+                  </div>
+                </dl>
               </div>
             </article>
           ))}
-        </div>
-
-        {/* Mobile Carousel */}
-        <div className="products__carousel">
-          <article className="products__carousel-item">
-            <div className="products__image-wrapper">
-              <img 
-                src={products[activeIndex].image} 
-                alt={`${products[activeIndex].name} - Produit premium de ${products[activeIndex].origin}`}
-                className="products__image"
-              />
-              <div className="products__badges">
-                {products[activeIndex].badges.map((badge, i) => (
-                  <span key={i} className="products__badge">{badge}</span>
-                ))}
-              </div>
-            </div>
-            <div className="products__content">
-              <h3 className="products__name">{products[activeIndex].name}</h3>
-              <p className="products__description">{products[activeIndex].description}</p>
-              <div className="products__traceability">
-                <span className="products__origin">
-                  🇨🇮 Origine: {products[activeIndex].origin} / {products[activeIndex].region}
-                </span>
-                {products[activeIndex].traceability && (
-                  <span className="products__trace-badge">✓ Traçabilité garantie</span>
-                )}
-              </div>
-            </div>
-          </article>
-          
-          <div className="products__carousel-nav">
-            <button 
-              className="products__carousel-btn" 
-              onClick={handlePrev}
-              aria-label="Produit précédent"
-            >
-              ‹
-            </button>
-            <div className="products__carousel-dots">
-              {products.map((_, index) => (
-                <button
-                  key={index}
-                  className={`products__carousel-dot ${index === activeIndex ? 'products__carousel-dot--active' : ''}`}
-                  onClick={() => setActiveIndex(index)}
-                  aria-label={`Voir ${products[index].name}`}
-                />
-              ))}
-            </div>
-            <button 
-              className="products__carousel-btn" 
-              onClick={handleNext}
-              aria-label="Produit suivant"
-            >
-              ›
-            </button>
-          </div>
-          <p className="products__carousel-counter">
-            {activeIndex + 1} / {products.length}
-          </p>
         </div>
       </div>
     </section>

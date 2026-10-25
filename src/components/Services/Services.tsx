@@ -1,46 +1,38 @@
-import { useState } from 'react'
 import SectionTitle from '../shared/SectionTitle'
-import Card from '../shared/Card'
 import useIntersectionObserver from '../../hooks/useIntersectionObserver'
 import { services } from '../../data/services'
 import './Services.css'
 
 export default function Services() {
-  const [expandedId, setExpandedId] = useState<string | null>(null)
   const { ref, isVisible } = useIntersectionObserver<HTMLElement>({ threshold: 0.1 })
 
-  const handleCardClick = (id: string) => {
-    setExpandedId(expandedId === id ? null : id)
-  }
-
   return (
-    <section id="services" className="services" ref={ref}>
-      <div className="services__container">
-        <SectionTitle 
-          title="Nos Activités" 
-          subtitle="Découvrez nos domaines d'expertise dans la valorisation des ressources agricoles ouest-africaines"
+    <section id="services" className={`services ${isVisible ? 'is-visible' : ''}`} ref={ref}>
+      <div className="container">
+        <SectionTitle
+          eyebrow="Nos activités"
+          title="Du champ au conteneur, une chaîne de valeur maîtrisée."
+          subtitle="Cinq métiers complémentaires pour valoriser les ressources agricoles ouest-africaines, de l'accompagnement des producteurs jusqu'aux marchés internationaux."
         />
-        
-        <div className={`services__grid ${isVisible ? 'services__grid--visible' : ''}`}>
+
+        <ol className="services__list">
           {services.map((service, index) => (
-            <div 
-              key={service.id} 
-              className="services__card-wrapper"
-              style={{ animationDelay: `${index * 100}ms` }}
+            <li
+              key={service.id}
+              className="services__item reveal"
+              style={{ '--delay': `${index * 80}ms` } as React.CSSProperties}
             >
-              <Card
-                title={service.title}
-                icon={service.icon}
-                expandable={true}
-                isExpanded={expandedId === service.id}
-                expandedContent={service.detailedDescription}
-                onClick={() => handleCardClick(service.id)}
-              >
-                {service.shortDescription}
-              </Card>
-            </div>
+              <span className="services__index" aria-hidden="true">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+              <div className="services__heading">
+                <h3 className="services__title">{service.title}</h3>
+                <p className="services__tagline">{service.shortDescription}</p>
+              </div>
+              <p className="services__description">{service.detailedDescription}</p>
+            </li>
           ))}
-        </div>
+        </ol>
       </div>
     </section>
   )

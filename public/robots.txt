@@ -1,11 +1,11 @@
 # robots.txt for SOANTA website
-# https://soanta.com
+# https://www.soanta.com
 
 User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://soanta.com/sitemap.xml
+Sitemap: https://www.soanta.com/sitemap.xml
 
 # Disallow admin or private areas (if any)
 # Disallow: /admin/

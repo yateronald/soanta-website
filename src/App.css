@@ -11,6 +11,7 @@ body {
   margin: 0;
   padding: 0;
   font-family: var(--font-family-primary);
+  font-size: var(--fs-body);
   color: var(--text-primary);
   background-color: var(--bg-primary);
   line-height: 1.6;
@@ -18,16 +19,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-main {
-  min-height: 100vh;
-}
-
 img {
   max-width: 100%;
   height: auto;
+  display: block;
 }
 
-/* Ensure SVGs are visible */
 svg {
   display: inline-block;
   vertical-align: middle;
@@ -42,30 +39,87 @@ button {
   font-family: inherit;
 }
 
-/* Focus visible for accessibility */
 :focus-visible {
   outline: 2px solid var(--color-orange);
-  outline-offset: 2px;
+  outline-offset: 3px;
+}
+
+::selection {
+  background-color: var(--color-orange);
+  color: var(--cocoa-950);
+}
+
+/* Layout */
+.container {
+  width: 100%;
+  max-width: calc(var(--container) + var(--gutter) * 2);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+/* Eyebrow label used above headings */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
+  font-size: var(--fs-eyebrow);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-accent);
+}
+
+.eyebrow::before {
+  content: '';
+  width: 28px;
+  height: 1px;
+  background: currentColor;
+}
+
+.eyebrow--light {
+  color: var(--color-orange);
+}
+
+/* Scroll reveal: children with .reveal animate in once the parent gets .is-visible */
+.reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity var(--transition-slow),
+    transform var(--transition-slow);
+  transition-delay: var(--delay, 0ms);
+}
+
+.is-visible .reveal {
+  opacity: 1;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
 }
 
 /* Skip link for accessibility */
 .skip-link {
   position: absolute;
-  top: -40px;
-  left: 0;
-  background: var(--color-green);
-  color: var(--color-white);
-  padding: var(--spacing-sm) var(--spacing-md);
+  top: -48px;
+  left: 1rem;
+  background: var(--cocoa-900);
+  color: var(--text-light);
+  padding: 0.75rem 1rem;
   z-index: 9999;
   transition: top var(--transition-fast);
 }
 
 .skip-link:focus {
-  top: 0;
-}
-
-/* Selection color */
-::selection {
-  background-color: var(--color-orange);
-  color: var(--color-white);
+  top: 1rem;
 }

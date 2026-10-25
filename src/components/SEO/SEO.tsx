@@ -8,7 +8,7 @@ interface SEOProps {
   canonicalUrl?: string
 }
 
-const SITE_URL = 'https://soanta-website.vercel.app'
+const SITE_URL = 'https://www.soanta.com'
 
 const defaultKeywords = [
   'cacao Côte d\'Ivoire',
