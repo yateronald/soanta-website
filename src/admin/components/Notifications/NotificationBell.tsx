@@ -3,7 +3,6 @@ import { Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../services/api';
 import type { Demande } from '../../types/admin';
-import './NotificationBell.css';
 
 // Custom event name for notification refresh
 export const NOTIFICATION_REFRESH_EVENT = 'notification-refresh';
@@ -72,7 +71,7 @@ export function NotificationBell() {
         onClick={() => setIsOpen(!isOpen)}
         aria-label="Notifications"
       >
-        <Bell size={20} />
+        <Bell size={17} />
         {newCount > 0 && (
           <span className="notification-badge">{newCount > 9 ? '9+' : newCount}</span>
         )}

@@ -1,7 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { ChevronDown } from 'lucide-react';
 import type { DemandeStatus } from '../../types/admin';
-import './StatusBadge.css';
 
 interface StatusBadgeProps {
   status: DemandeStatus;
@@ -58,7 +57,7 @@ export function StatusBadge({ status, onChange, editable = false }: StatusBadgeP
         type="button"
       >
         {status}
-        <ChevronDown size={14} className={`dropdown-icon ${isOpen ? 'open' : ''}`} />
+        <ChevronDown size={12} className={`dropdown-icon ${isOpen ? 'open' : ''}`} />
       </button>
 
       {isOpen && (

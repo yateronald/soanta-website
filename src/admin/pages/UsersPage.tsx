@@ -4,7 +4,6 @@ import { UserForm } from '../components/Users/UserForm';
 import { useUsers } from '../hooks/useUsers';
 import { useAuth } from '../hooks/useAuth';
 import type { User, CreateUserRequest } from '../types/admin';
-import '../styles/admin.css';
 
 export function UsersPage() {
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -38,8 +37,10 @@ export function UsersPage() {
   return (
     <div className="users-page">
       <div className="page-header">
-        <h1>Gestion des utilisateurs</h1>
-        <p>Gérez les comptes utilisateurs ayant accès au panneau d'administration.</p>
+        <div>
+          <h1>Utilisateurs</h1>
+          <p>Gérez les comptes qui ont accès à l'administration.</p>
+        </div>
       </div>
 
       <UsersList

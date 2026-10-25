@@ -21,11 +21,24 @@ export interface ContactFormData {
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
+// Keep in sync with the API validation rules (server/src/middleware/validate.js)
+export const MAX_LENGTHS = {
+  nom: 100,
+  entreprise: 100,
+  message: 2000
+} as const
+
 export function validateNom(nom: string): ValidationError | null {
   if (!nom || nom.trim().length < 2) {
     return {
       field: 'nom',
       message: 'Veuillez entrer votre nom (minimum 2 caractères)'
+    }
+  }
+  if (nom.trim().length > MAX_LENGTHS.nom) {
+    return {
+      field: 'nom',
+      message: `Le nom ne peut pas dépasser ${MAX_LENGTHS.nom} caractères`
     }
   }
   return null
@@ -46,6 +59,12 @@ export function validateMessage(message: string): ValidationError | null {
     return {
       field: 'message',
       message: 'Votre message doit contenir au moins 10 caractères'
+    }
+  }
+  if (message.trim().length > MAX_LENGTHS.message) {
+    return {
+      field: 'message',
+      message: `Votre message ne peut pas dépasser ${MAX_LENGTHS.message} caractères`
     }
   }
   return null
@@ -90,11 +109,23 @@ export default function useFormValidation() {
     setIsValid(false)
   }, [])
 
+  // Errors returned by the API for specific fields
+  const setFieldErrors = useCallback((fieldErrors: ValidationError[]) => {
+    setErrors(fieldErrors)
+    setIsValid(fieldErrors.length === 0)
+  }, [])
+
+  const clearFieldError = useCallback((field: string) => {
+    setErrors(prev => prev.filter(e => e.field !== field))
+  }, [])
+
   return {
     errors,
     isValid,
     validate,
     getFieldError,
-    clearErrors
+    clearErrors,
+    setFieldErrors,
+    clearFieldError
   }
 }

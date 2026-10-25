@@ -1,6 +1,5 @@
-import { FileText, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Inbox, Clock, CheckCircle2, CircleDot } from 'lucide-react';
 import type { DemandesStats } from '../../types/admin';
-import './StatsCards.css';
 
 interface StatsCardsProps {
   stats: DemandesStats;
@@ -9,10 +8,10 @@ interface StatsCardsProps {
 
 export function StatsCards({ stats, isLoading }: StatsCardsProps) {
   const cards = [
-    { label: 'Total', value: stats.total, icon: FileText, color: 'blue' },
-    { label: 'Nouveau', value: stats.nouveau, icon: AlertCircle, color: 'orange' },
+    { label: 'Total des demandes', value: stats.total, icon: Inbox, color: 'blue' },
+    { label: 'Nouvelles', value: stats.nouveau, icon: CircleDot, color: 'orange' },
     { label: 'En attente', value: stats.enAttente, icon: Clock, color: 'yellow' },
-    { label: 'Traité', value: stats.traite, icon: CheckCircle, color: 'green' },
+    { label: 'Traitées', value: stats.traite, icon: CheckCircle2, color: 'green' },
   ];
 
   return (
@@ -27,7 +26,7 @@ export function StatsCards({ stats, isLoading }: StatsCardsProps) {
           ) : (
             <>
               <div className="stat-card__icon">
-                <card.icon size={24} />
+                <card.icon size={18} strokeWidth={2} />
               </div>
               <div className="stat-card__content">
                 <span className="stat-card__value">{card.value}</span>

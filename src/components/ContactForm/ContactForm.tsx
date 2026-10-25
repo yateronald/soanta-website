@@ -1,12 +1,25 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { FormEvent } from 'react'
 import { ArrowRight } from 'lucide-react'
 import Button from '../shared/Button'
-import useFormValidation from '../../hooks/useFormValidation'
+import useFormValidation, { MAX_LENGTHS } from '../../hooks/useFormValidation'
 import type { ContactFormData } from '../../hooks/useFormValidation'
 import './ContactForm.css'
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://soanta-api-cfir.onrender.com/api'
+
+// The API runs on Render's free plan and can take up to a minute to wake up
+const REQUEST_TIMEOUT_MS = 90_000
+const SLOW_NOTICE_MS = 6_000
+
+const EMPTY_FORM: ContactFormData = {
+  nom: '',
+  email: '',
+  telephone: '',
+  entreprise: '',
+  typePartenariat: '',
+  message: ''
+}
 
 const partnershipTypes = [
   { value: '', label: 'Sélectionnez un type de partenariat' },
@@ -17,69 +30,97 @@ const partnershipTypes = [
   { value: 'autre', label: 'Autre' }
 ]
 
+interface ApiErrorBody {
+  success?: boolean
+  error?: {
+    code?: string
+    message?: string
+    details?: Record<string, string>
+  }
+}
+
+async function readJson(response: Response): Promise<ApiErrorBody | null> {
+  try {
+    return await response.json()
+  } catch {
+    return null
+  }
+}
+
 export default function ContactForm() {
-  const [formData, setFormData] = useState<ContactFormData>({
-    nom: '',
-    email: '',
-    telephone: '',
-    entreprise: '',
-    typePartenariat: '',
-    message: ''
-  })
+  const [formData, setFormData] = useState<ContactFormData>(EMPTY_FORM)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSlow, setIsSlow] = useState(false)
   const [showSuccessModal, setShowSuccessModal] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
-  
-  const { validate, getFieldError, clearErrors } = useFormValidation()
+
+  const { validate, getFieldError, clearErrors, setFieldErrors, clearFieldError } = useFormValidation()
+
+  // Wake the API up as soon as the page loads so the submission itself is fast
+  useEffect(() => {
+    fetch(`${API_BASE_URL}/health`).catch(() => {})
+  }, [])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+    clearFieldError(name)
     setSubmitError(null)
   }
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault()
     setSubmitError(null)
-    
+
     const result = validate(formData)
-    
-    if (result.isValid) {
-      setIsSubmitting(true)
-      
-      try {
-        const response = await fetch(`${API_BASE_URL}/demandes`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(formData),
-        })
+    if (!result.isValid) return
 
-        const data = await response.json()
+    setIsSubmitting(true)
+    setIsSlow(false)
 
-        if (response.ok && data.success) {
-          // Show loading for 3 seconds before displaying success modal
-          await new Promise(resolve => setTimeout(resolve, 3000))
-          setIsSubmitting(false)
-          setShowSuccessModal(true)
-          setFormData({
-            nom: '',
-            email: '',
-            telephone: '',
-            entreprise: '',
-            typePartenariat: '',
-            message: ''
-          })
-          clearErrors()
-        } else {
-          setIsSubmitting(false)
-          setSubmitError(data.error?.message || 'Une erreur est survenue. Veuillez réessayer.')
-        }
-      } catch {
-        setIsSubmitting(false)
-        setSubmitError('Impossible de contacter le serveur. Veuillez réessayer plus tard.')
+    const controller = new AbortController()
+    const slowTimer = setTimeout(() => setIsSlow(true), SLOW_NOTICE_MS)
+    const abortTimer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+
+    try {
+      const response = await fetch(`${API_BASE_URL}/demandes`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+        signal: controller.signal,
+      })
+
+      const data = await readJson(response)
+
+      if (response.ok && data?.success) {
+        setShowSuccessModal(true)
+        setFormData(EMPTY_FORM)
+        clearErrors()
+        return
       }
+
+      const details = data?.error?.details
+      if (details && Object.keys(details).length > 0) {
+        setFieldErrors(Object.entries(details).map(([field, message]) => ({ field, message })))
+        setSubmitError('Certains champs sont à corriger.')
+      } else if (response.status === 429) {
+        setSubmitError(data?.error?.message || 'Trop de demandes envoyées. Veuillez réessayer dans une heure.')
+      } else {
+        setSubmitError(data?.error?.message || 'Une erreur est survenue. Veuillez réessayer.')
+      }
+    } catch (error) {
+      setSubmitError(
+        error instanceof DOMException && error.name === 'AbortError'
+          ? 'Le serveur met trop de temps à répondre. Veuillez réessayer dans un instant.'
+          : 'Impossible de contacter le serveur. Vérifiez votre connexion et réessayez.'
+      )
+    } finally {
+      clearTimeout(slowTimer)
+      clearTimeout(abortTimer)
+      setIsSubmitting(false)
+      setIsSlow(false)
     }
   }
 
@@ -152,6 +193,8 @@ export default function ContactForm() {
                 onChange={handleChange}
                 className={`contact-form__input ${getFieldError('nom') ? 'contact-form__input--error' : ''}`}
                 aria-label="Votre nom"
+                maxLength={MAX_LENGTHS.nom}
+                autoComplete="name"
                 aria-describedby={getFieldError('nom') ? 'nom-error' : undefined}
                 aria-invalid={!!getFieldError('nom')}
                 disabled={isSubmitting}
@@ -175,6 +218,7 @@ export default function ContactForm() {
                 onChange={handleChange}
                 className={`contact-form__input ${getFieldError('email') ? 'contact-form__input--error' : ''}`}
                 aria-label="Votre adresse email"
+                autoComplete="email"
                 aria-describedby={getFieldError('email') ? 'email-error' : undefined}
                 aria-invalid={!!getFieldError('email')}
                 disabled={isSubmitting}
@@ -200,6 +244,7 @@ export default function ContactForm() {
                 onChange={handleChange}
                 className="contact-form__input"
                 aria-label="Votre numéro de téléphone"
+                autoComplete="tel"
                 placeholder="+225 07 00 00 00 00"
                 disabled={isSubmitting}
               />
@@ -217,6 +262,8 @@ export default function ContactForm() {
                 onChange={handleChange}
                 className="contact-form__input"
                 aria-label="Nom de votre entreprise"
+                maxLength={MAX_LENGTHS.entreprise}
+                autoComplete="organization"
                 disabled={isSubmitting}
               />
             </div>
@@ -257,6 +304,7 @@ export default function ContactForm() {
               rows={5}
               className={`contact-form__textarea ${getFieldError('message') ? 'contact-form__input--error' : ''}`}
               aria-label="Votre message"
+              maxLength={MAX_LENGTHS.message}
               aria-describedby={getFieldError('message') ? 'message-error' : undefined}
               aria-invalid={!!getFieldError('message')}
               disabled={isSubmitting}
@@ -296,7 +344,12 @@ export default function ContactForm() {
           <div className="contact-form__loading-overlay">
             <div className="contact-form__loading-content">
               <div className="contact-form__loading-spinner"></div>
-              <p>Envoi de votre message...</p>
+              <p>Envoi de votre message…</p>
+              {isSlow && (
+                <p className="contact-form__loading-note">
+                  Le serveur se réveille, cela peut prendre jusqu'à une minute. Merci de patienter.
+                </p>
+              )}
             </div>
           </div>
         )}

@@ -1,78 +1,119 @@
-const Database = require('better-sqlite3');
+const { Pool, types } = require('pg');
 const bcrypt = require('bcryptjs');
-const path = require('path');
 
-const dbPath = path.join(__dirname, '../../data/database.sqlite');
-const db = new Database(dbPath);
+// COUNT()/SUM() return BIGINT, which pg hands back as strings by default
+types.setTypeParser(20, (value) => parseInt(value, 10));
 
-// Enable foreign keys
-db.pragma('foreign_keys = ON');
+function sslConfig() {
+  if (process.env.DB_SSL !== 'true') return false;
+  // With the provider's CA certificate we can fully verify the server;
+  // otherwise keep the connection encrypted without certificate verification.
+  if (process.env.DB_CA_CERT) {
+    return { ca: process.env.DB_CA_CERT.replace(/\\n/g, '\n'), rejectUnauthorized: true };
+  }
+  return { rejectUnauthorized: false };
+}
 
-function initializeDatabase() {
-  // Create users table
-  db.exec(`
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT || '5432', 10),
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  ssl: sslConfig(),
+  max: parseInt(process.env.DB_POOL_MAX || '5', 10),
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 15000,
+});
+
+pool.on('error', (err) => {
+  // An idle client lost its connection; the pool will create a new one on demand
+  console.error('PostgreSQL pool error:', err.message);
+});
+
+/**
+ * Run a query and return all rows
+ */
+async function query(text, params = []) {
+  const { rows } = await pool.query(text, params);
+  return rows;
+}
+
+/**
+ * Run a query and return the first row (or undefined)
+ */
+async function queryOne(text, params = []) {
+  const rows = await query(text, params);
+  return rows[0];
+}
+
+async function initializeDatabase() {
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       username TEXT NOT NULL,
       email TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
-      role TEXT DEFAULT 'user' CHECK(role IN ('admin', 'user')),
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      role TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('admin', 'user')),
+      "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
 
-  // Create demandes table
-  db.exec(`
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS demandes (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id SERIAL PRIMARY KEY,
       nom TEXT NOT NULL,
       email TEXT NOT NULL,
       telephone TEXT,
       entreprise TEXT,
-      typePartenariat TEXT,
+      "typePartenariat" TEXT,
       message TEXT NOT NULL,
-      status TEXT DEFAULT 'Nouveau' CHECK(status IN ('Nouveau', 'En attente', 'Traité')),
-      isDeleted INTEGER DEFAULT 0,
-      createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-      updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+      status TEXT NOT NULL DEFAULT 'Nouveau' CHECK (status IN ('Nouveau', 'En attente', 'Traité')),
+      "isDeleted" SMALLINT NOT NULL DEFAULT 0,
+      "createdAt" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      "updatedAt" TIMESTAMPTZ NOT NULL DEFAULT NOW()
     )
   `);
-  
-  // Add telephone column if it doesn't exist (for existing databases)
-  try {
-    db.exec(`ALTER TABLE demandes ADD COLUMN telephone TEXT`);
-  } catch (e) {
-    // Column already exists, ignore
-  }
 
-  // Seed default admin user if not exists
-  seedDefaultAdmin();
+  await pool.query(`
+    CREATE INDEX IF NOT EXISTS demandes_list_idx ON demandes ("isDeleted", "createdAt" DESC)
+  `);
+
+  await seedDefaultAdmin();
 }
 
-function seedDefaultAdmin() {
-  // Admin credentials can be overridden with ADMIN_EMAIL / ADMIN_PASSWORD (e.g. on Render)
+/**
+ * Make sure the default admin account exists.
+ * Its password is only set on creation (so changes made from the admin panel
+ * survive restarts), unless ADMIN_RESET_PASSWORD=true is set to recover access.
+ */
+async function seedDefaultAdmin() {
   const email = (process.env.ADMIN_EMAIL || 'exportinfos@soanta.com').toLowerCase();
   const password = process.env.ADMIN_PASSWORD || 'Admin@123';
-  const hashedPassword = bcrypt.hashSync(password, 10);
 
-  const existingAdmin =
-    db.prepare('SELECT id FROM users WHERE email = ?').get(email) ||
-    db.prepare('SELECT id FROM users WHERE username = ?').get('admin');
+  const existingAdmin = await queryOne('SELECT id FROM users WHERE email = $1', [email]);
 
   if (!existingAdmin) {
-    db.prepare(`
-      INSERT INTO users (username, email, password, role)
-      VALUES (?, ?, ?, ?)
-    `).run('admin', email, hashedPassword, 'admin');
+    await pool.query(
+      `INSERT INTO users (username, email, password, role) VALUES ($1, $2, $3, 'admin')`,
+      ['admin', email, bcrypt.hashSync(password, 10)]
+    );
     console.log(`Default admin user created: ${email}`);
-  } else {
-    // Keep the admin account in sync with the configured email and password
-    db.prepare(`UPDATE users SET email = ?, password = ?, role = 'admin' WHERE id = ?`)
-      .run(email, hashedPassword, existingAdmin.id);
+    return;
+  }
+
+  if (process.env.ADMIN_RESET_PASSWORD === 'true') {
+    await pool.query(
+      `UPDATE users SET password = $1, role = 'admin' WHERE id = $2`,
+      [bcrypt.hashSync(password, 10), existingAdmin.id]
+    );
+    console.log(`Admin password reset for ${email}`);
   }
 }
 
 module.exports = {
-  db,
+  pool,
+  query,
+  queryOne,
   initializeDatabase
 };

@@ -1,50 +1,57 @@
-const { db } = require('../config/database');
+const { query, queryOne } = require('../config/database');
+
+const STATUSES = ['Nouveau', 'En attente', 'Traité'];
+
+const NOT_FOUND = {
+  success: false,
+  error: {
+    code: 'NOT_FOUND',
+    message: 'Ressource non trouvée'
+  }
+};
 
 /**
  * Get all demandes with pagination, filtering, and search
  * @param {Object} options - Query options
- * @returns {Object} Paginated demandes with stats
+ * @returns {Promise<Object>} Paginated demandes with stats
  */
-function getAllDemandes({ page = 1, limit = 10, status, search, includeDeleted = false }) {
+async function getAllDemandes({ page = 1, limit = 10, status, search, includeDeleted = false }) {
   const offset = (page - 1) * limit;
-  let whereConditions = [];
-  let params = [];
+  const whereConditions = [];
+  const params = [];
 
   // Filter by deleted status
   if (!includeDeleted) {
-    whereConditions.push('isDeleted = 0');
+    whereConditions.push('"isDeleted" = 0');
   }
 
   // Filter by status
-  if (status && ['Nouveau', 'En attente', 'Traité'].includes(status)) {
-    whereConditions.push('status = ?');
+  if (status && STATUSES.includes(status)) {
     params.push(status);
+    whereConditions.push(`status = $${params.length}`);
   }
 
-  // Search by nom, email, or entreprise
+  // Search by nom, email, or entreprise (case-insensitive)
   if (search) {
-    whereConditions.push('(nom LIKE ? OR email LIKE ? OR entreprise LIKE ?)');
-    const searchTerm = `%${search}%`;
-    params.push(searchTerm, searchTerm, searchTerm);
+    params.push(`%${search}%`);
+    const p = `$${params.length}`;
+    whereConditions.push(`(nom ILIKE ${p} OR email ILIKE ${p} OR entreprise ILIKE ${p})`);
   }
 
   const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
 
-  // Get total count
-  const countQuery = `SELECT COUNT(*) as total FROM demandes ${whereClause}`;
-  const { total } = db.prepare(countQuery).get(...params);
+  const { total } = await queryOne(`SELECT COUNT(*) AS total FROM demandes ${whereClause}`, params);
 
-  // Get paginated data
-  const dataQuery = `
-    SELECT * FROM demandes 
-    ${whereClause}
-    ORDER BY createdAt DESC
-    LIMIT ? OFFSET ?
-  `;
-  const data = db.prepare(dataQuery).all(...params, limit, offset);
+  const data = await query(
+    `SELECT * FROM demandes
+     ${whereClause}
+     ORDER BY "createdAt" DESC
+     LIMIT $${params.length + 1} OFFSET $${params.length + 2}`,
+    [...params, limit, offset]
+  );
 
-  // Get stats (only non-deleted)
-  const stats = getStats();
+  // Stats (only non-deleted)
+  const stats = await getStats();
 
   return {
     success: true,
@@ -60,38 +67,28 @@ function getAllDemandes({ page = 1, limit = 10, status, search, includeDeleted =
 
 /**
  * Get demande statistics
- * @returns {Object} Stats object
+ * @returns {Promise<Object>} Stats object
  */
-function getStats() {
-  const statsQuery = `
-    SELECT 
-      COUNT(*) as total,
-      SUM(CASE WHEN status = 'Nouveau' THEN 1 ELSE 0 END) as nouveau,
-      SUM(CASE WHEN status = 'En attente' THEN 1 ELSE 0 END) as enAttente,
-      SUM(CASE WHEN status = 'Traité' THEN 1 ELSE 0 END) as traite
+async function getStats() {
+  return queryOne(`
+    SELECT
+      COUNT(*) AS total,
+      COUNT(*) FILTER (WHERE status = 'Nouveau') AS nouveau,
+      COUNT(*) FILTER (WHERE status = 'En attente') AS "enAttente",
+      COUNT(*) FILTER (WHERE status = 'Traité') AS traite
     FROM demandes
-    WHERE isDeleted = 0
-  `;
-  return db.prepare(statsQuery).get();
+    WHERE "isDeleted" = 0
+  `);
 }
 
 /**
  * Get a single demande by ID
  * @param {number} id - Demande ID
- * @returns {Object} Demande or error
+ * @returns {Promise<Object>} Demande or error
  */
-function getDemandeById(id) {
-  const demande = db.prepare('SELECT * FROM demandes WHERE id = ?').get(id);
-
-  if (!demande) {
-    return {
-      success: false,
-      error: {
-        code: 'NOT_FOUND',
-        message: 'Ressource non trouvée'
-      }
-    };
-  }
+async function getDemandeById(id) {
+  const demande = await queryOne('SELECT * FROM demandes WHERE id = $1', [id]);
+  if (!demande) return NOT_FOUND;
 
   return {
     success: true,
@@ -102,18 +99,17 @@ function getDemandeById(id) {
 /**
  * Create a new demande
  * @param {Object} data - Demande data
- * @returns {Object} Created demande
+ * @returns {Promise<Object>} Created demande
  */
-function createDemande({ nom, email, telephone, entreprise, typePartenariat, message }) {
+async function createDemande({ nom, email, telephone, entreprise, typePartenariat, message }) {
   // Only allow specific fields - prevent mass assignment
   // Status and isDeleted are NOT accepted from user input
-  const stmt = db.prepare(`
-    INSERT INTO demandes (nom, email, telephone, entreprise, typePartenariat, message, status, isDeleted)
-    VALUES (?, ?, ?, ?, ?, ?, 'Nouveau', 0)
-  `);
-
-  const result = stmt.run(nom, email, telephone || null, entreprise || null, typePartenariat || null, message);
-  const created = db.prepare('SELECT * FROM demandes WHERE id = ?').get(result.lastInsertRowid);
+  const created = await queryOne(
+    `INSERT INTO demandes (nom, email, telephone, entreprise, "typePartenariat", message, status, "isDeleted")
+     VALUES ($1, $2, $3, $4, $5, $6, 'Nouveau', 0)
+     RETURNING *`,
+    [nom, email, telephone || null, entreprise || null, typePartenariat || null, message]
+  );
 
   return {
     success: true,
@@ -125,10 +121,10 @@ function createDemande({ nom, email, telephone, entreprise, typePartenariat, mes
  * Update demande status
  * @param {number} id - Demande ID
  * @param {string} status - New status
- * @returns {Object} Updated demande or error
+ * @returns {Promise<Object>} Updated demande or error
  */
-function updateDemandeStatus(id, status) {
-  if (!['Nouveau', 'En attente', 'Traité'].includes(status)) {
+async function updateDemandeStatus(id, status) {
+  if (!STATUSES.includes(status)) {
     return {
       success: false,
       error: {
@@ -138,24 +134,11 @@ function updateDemandeStatus(id, status) {
     };
   }
 
-  const existing = db.prepare('SELECT * FROM demandes WHERE id = ?').get(id);
-  if (!existing) {
-    return {
-      success: false,
-      error: {
-        code: 'NOT_FOUND',
-        message: 'Ressource non trouvée'
-      }
-    };
-  }
-
-  db.prepare(`
-    UPDATE demandes 
-    SET status = ?, updatedAt = CURRENT_TIMESTAMP 
-    WHERE id = ?
-  `).run(status, id);
-
-  const updated = db.prepare('SELECT * FROM demandes WHERE id = ?').get(id);
+  const updated = await queryOne(
+    `UPDATE demandes SET status = $1, "updatedAt" = NOW() WHERE id = $2 RETURNING *`,
+    [status, id]
+  );
+  if (!updated) return NOT_FOUND;
 
   return {
     success: true,
@@ -166,25 +149,14 @@ function updateDemandeStatus(id, status) {
 /**
  * Soft delete a demande
  * @param {number} id - Demande ID
- * @returns {Object} Success or error
+ * @returns {Promise<Object>} Success or error
  */
-function softDeleteDemande(id) {
-  const existing = db.prepare('SELECT * FROM demandes WHERE id = ?').get(id);
-  if (!existing) {
-    return {
-      success: false,
-      error: {
-        code: 'NOT_FOUND',
-        message: 'Ressource non trouvée'
-      }
-    };
-  }
-
-  db.prepare(`
-    UPDATE demandes 
-    SET isDeleted = 1, updatedAt = CURRENT_TIMESTAMP 
-    WHERE id = ?
-  `).run(id);
+async function softDeleteDemande(id) {
+  const deleted = await queryOne(
+    `UPDATE demandes SET "isDeleted" = 1, "updatedAt" = NOW() WHERE id = $1 RETURNING id`,
+    [id]
+  );
+  if (!deleted) return NOT_FOUND;
 
   return {
     success: true,
@@ -195,27 +167,14 @@ function softDeleteDemande(id) {
 /**
  * Restore a soft-deleted demande
  * @param {number} id - Demande ID
- * @returns {Object} Restored demande or error
+ * @returns {Promise<Object>} Restored demande or error
  */
-function restoreDemande(id) {
-  const existing = db.prepare('SELECT * FROM demandes WHERE id = ?').get(id);
-  if (!existing) {
-    return {
-      success: false,
-      error: {
-        code: 'NOT_FOUND',
-        message: 'Ressource non trouvée'
-      }
-    };
-  }
-
-  db.prepare(`
-    UPDATE demandes 
-    SET isDeleted = 0, updatedAt = CURRENT_TIMESTAMP 
-    WHERE id = ?
-  `).run(id);
-
-  const restored = db.prepare('SELECT * FROM demandes WHERE id = ?').get(id);
+async function restoreDemande(id) {
+  const restored = await queryOne(
+    `UPDATE demandes SET "isDeleted" = 0, "updatedAt" = NOW() WHERE id = $1 RETURNING *`,
+    [id]
+  );
+  if (!restored) return NOT_FOUND;
 
   return {
     success: true,
@@ -226,21 +185,11 @@ function restoreDemande(id) {
 /**
  * Permanently delete a demande from the database
  * @param {number} id - Demande ID
- * @returns {Object} Success or error
+ * @returns {Promise<Object>} Success or error
  */
-function permanentDeleteDemande(id) {
-  const existing = db.prepare('SELECT * FROM demandes WHERE id = ?').get(id);
-  if (!existing) {
-    return {
-      success: false,
-      error: {
-        code: 'NOT_FOUND',
-        message: 'Ressource non trouvée'
-      }
-    };
-  }
-
-  db.prepare('DELETE FROM demandes WHERE id = ?').run(id);
+async function permanentDeleteDemande(id) {
+  const removed = await queryOne('DELETE FROM demandes WHERE id = $1 RETURNING id', [id]);
+  if (!removed) return NOT_FOUND;
 
   return {
     success: true,

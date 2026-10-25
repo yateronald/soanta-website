@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Search, Filter, RefreshCw, Download, Eye, Trash2 } from 'lucide-react';
+import { Search, ListFilter, RefreshCw, Download, Eye, Trash2, Inbox, ChevronLeft, ChevronRight } from 'lucide-react';
+import { formatDate, formatTime, initials, partnershipLabel } from '../../utils/format';
 import { StatusBadge } from './StatusBadge';
 import { ConfirmDialog } from '../shared/ConfirmDialog';
 import type { Demande, DemandeStatus, DemandesFilters } from '../../types/admin';
-import './DemandesList.css';
 
 interface DemandesListProps {
   demandes: Demande[];
@@ -115,36 +115,28 @@ export function DemandesList({
     URL.revokeObjectURL(url);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   return (
     <div className="demandes-list">
       <div className="demandes-toolbar">
         <div className="toolbar-left">
           <div className="search-box">
-            <Search size={18} color="#6b7280" strokeWidth={2} />
+            <Search size={15} />
             <input
-              type="text"
-              placeholder="Rechercher..."
+              type="search"
+              placeholder="Rechercher un nom, un email, une entreprise…"
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
               onKeyDown={handleKeyDown}
+              aria-label="Rechercher une demande"
             />
           </div>
-          
+
           <div className="filter-dropdown">
-            <Filter size={18} color="#6b7280" strokeWidth={2} />
+            <ListFilter size={15} />
             <select
               value={filters.status || ''}
               onChange={(e) => handleStatusFilter(e.target.value as DemandeStatus | '')}
+              aria-label="Filtrer par statut"
             >
               <option value="">Tous les statuts</option>
               <option value="Nouveau">Nouveau</option>
@@ -155,11 +147,12 @@ export function DemandesList({
         </div>
 
         <div className="toolbar-right">
-          <button className="toolbar-btn" onClick={onRefresh} title="Actualiser" style={{ padding: 0 }}>
-            <RefreshCw size={18} color="#6b7280" strokeWidth={2} className={isLoading ? 'spinning' : ''} />
+          <button className="toolbar-btn" onClick={onRefresh} title="Actualiser" aria-label="Actualiser">
+            <RefreshCw size={15} className={isLoading ? 'spinning' : ''} />
           </button>
-          <button className="toolbar-btn" onClick={exportToCSV} title="Exporter CSV" style={{ padding: 0 }}>
-            <Download size={18} color="#6b7280" strokeWidth={2} />
+          <button className="btn btn-secondary" onClick={exportToCSV} disabled={demandes.length === 0}>
+            <Download size={15} />
+            Exporter
           </button>
         </div>
       </div>
@@ -168,39 +161,59 @@ export function DemandesList({
         <table className="demandes-table">
           <thead>
             <tr>
-              <th>Nom</th>
-              <th>Email</th>
+              <th>Contact</th>
               <th>Téléphone</th>
               <th>Entreprise</th>
               <th>Type</th>
-              <th>Status</th>
-              <th>Date</th>
-              <th>Actions</th>
+              <th>Statut</th>
+              <th>Reçue le</th>
+              <th className="th-actions">Actions</th>
             </tr>
           </thead>
           <tbody>
             {isLoading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={i} className="skeleton-row">
-                  {Array.from({ length: 8 }).map((_, j) => (
+                  {Array.from({ length: 7 }).map((_, j) => (
                     <td key={j}><div className="skeleton-cell" /></td>
                   ))}
                 </tr>
               ))
             ) : demandes.length === 0 ? (
               <tr>
-                <td colSpan={8} className="empty-state">
-                  Aucune demande trouvée
+                <td colSpan={7} className="empty-state">
+                  <div className="empty-state__inner">
+                    <span className="empty-state__icon"><Inbox size={20} /></span>
+                    <span className="empty-state__title">Aucune demande</span>
+                    <span className="empty-state__text">
+                      {filters.search || filters.status
+                        ? 'Aucun résultat pour ces critères.'
+                        : 'Les demandes envoyées depuis le site apparaîtront ici.'}
+                    </span>
+                  </div>
                 </td>
               </tr>
             ) : (
               demandes.map((demande) => (
                 <tr key={demande.id}>
-                  <td className="cell-name">{demande.nom}</td>
-                  <td className="cell-email">{demande.email}</td>
-                  <td className="cell-phone">{demande.telephone || '-'}</td>
-                  <td>{demande.entreprise || '-'}</td>
-                  <td>{demande.typePartenariat || '-'}</td>
+                  <td>
+                    <div className="cell-person">
+                      <span className="user-avatar" aria-hidden="true">{initials(demande.nom)}</span>
+                      <div className="cell-person__text">
+                        <span className="cell-person__name" title={demande.nom}>{demande.nom}</span>
+                        <span className="cell-person__sub">{demande.email}</span>
+                      </div>
+                    </div>
+                  </td>
+                  <td className={`cell-phone ${demande.telephone ? '' : 'cell-muted'}`}>
+                    {demande.telephone || '—'}
+                  </td>
+                  <td className={`cell-truncate ${demande.entreprise ? '' : 'cell-muted'}`} title={demande.entreprise || undefined}>
+                    {demande.entreprise || '—'}
+                  </td>
+                  <td className={demande.typePartenariat ? '' : 'cell-muted'}>
+                    {partnershipLabel(demande.typePartenariat)}
+                  </td>
                   <td>
                     <StatusBadge
                       status={demande.status}
@@ -208,23 +221,26 @@ export function DemandesList({
                       onChange={(status) => onStatusChange(demande.id, status)}
                     />
                   </td>
-                  <td className="cell-date">{formatDate(demande.createdAt)}</td>
+                  <td className="cell-date">
+                    {formatDate(demande.createdAt)}
+                    <small>{formatTime(demande.createdAt)}</small>
+                  </td>
                   <td className="cell-actions">
                     <button
                       className="action-btn action-btn--view"
                       onClick={() => onView(demande)}
-                      title="Voir détails"
-                      style={{ padding: 0 }}
+                      title="Voir le détail"
+                      aria-label={`Voir la demande de ${demande.nom}`}
                     >
-                      <Eye size={16} strokeWidth={2} color="#3b82f6" />
+                      <Eye size={16} />
                     </button>
                     <button
                       className="action-btn action-btn--delete"
                       onClick={() => setDeleteTarget(demande)}
                       title="Supprimer"
-                      style={{ padding: 0 }}
+                      aria-label={`Supprimer la demande de ${demande.nom}`}
                     >
-                      <Trash2 size={16} strokeWidth={2} color="#ef4444" />
+                      <Trash2 size={16} />
                     </button>
                   </td>
                 </tr>
@@ -234,43 +250,47 @@ export function DemandesList({
         </table>
       </div>
 
-      {/* Pagination - Always visible */}
       <div className="pagination">
         <div className="pagination-info">
-          Affichage de <strong>{demandes.length > 0 ? ((page - 1) * limit) + 1 : 0}</strong> à <strong>{Math.min(page * limit, total)}</strong> sur <strong>{total}</strong> résultats
+          <strong>{demandes.length > 0 ? ((page - 1) * limit) + 1 : 0}</strong>–<strong>{Math.min(page * limit, total)}</strong> sur <strong>{total}</strong> demande{total > 1 ? 's' : ''}
         </div>
-        
+
         <div className="pagination-controls">
           <button
             className="pagination-btn"
             disabled={page <= 1}
             onClick={() => handlePageChange(page - 1)}
+            aria-label="Page précédente"
           >
-            ← Précédent
+            <ChevronLeft size={15} />
+            <span>Précédent</span>
           </button>
-          
+
           <div className="pagination-pages">
             {getPageNumbers().map((pageNum, idx) => (
               pageNum === '...' ? (
-                <span key={`ellipsis-${idx}`} className="page-ellipsis">...</span>
+                <span key={`ellipsis-${idx}`} className="page-ellipsis">…</span>
               ) : (
                 <button
                   key={pageNum}
                   className={`page-btn ${page === pageNum ? 'active' : ''}`}
                   onClick={() => handlePageChange(pageNum as number)}
+                  aria-current={page === pageNum ? 'page' : undefined}
                 >
                   {pageNum}
                 </button>
               )
             ))}
           </div>
-          
+
           <button
             className="pagination-btn"
             disabled={page >= totalPages}
             onClick={() => handlePageChange(page + 1)}
+            aria-label="Page suivante"
           >
-            Suivant →
+            <span>Suivant</span>
+            <ChevronRight size={15} />
           </button>
         </div>
       </div>

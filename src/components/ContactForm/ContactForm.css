@@ -246,6 +246,14 @@
   font-weight: 500;
 }
 
+.contact-form__loading-content .contact-form__loading-note {
+  max-width: 30ch;
+  font-size: var(--fs-small);
+  font-weight: 400;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
 .contact-form__loading-spinner {
   width: 36px;
   height: 36px;

@@ -1,4 +1,5 @@
 const express = require('express');
+const asyncHandler = require('../utils/asyncHandler');
 const { body, validationResult } = require('express-validator');
 const usersService = require('../services/usersService');
 const authMiddleware = require('../middleware/auth');
@@ -73,28 +74,28 @@ function handleValidationErrors(req, res, next) {
 }
 
 // GET /api/users - List all users
-router.get('/', authMiddleware, (req, res) => {
-  const result = usersService.getAllUsers();
+router.get('/', authMiddleware, asyncHandler(async (req, res) => {
+  const result = await usersService.getAllUsers();
   res.json(result);
-});
+}));
 
 // GET /api/users/:id - Get single user
-router.get('/:id', authMiddleware, validateIdParam, (req, res) => {
+router.get('/:id', authMiddleware, validateIdParam, asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const result = usersService.getUserById(id);
+  const result = await usersService.getUserById(id);
 
   if (!result.success) {
     return res.status(404).json(result);
   }
 
   res.json(result);
-});
+}));
 
 // POST /api/users - Create new user
-router.post('/', authMiddleware, createUserValidation, handleValidationErrors, (req, res) => {
+router.post('/', authMiddleware, createUserValidation, handleValidationErrors, asyncHandler(async (req, res) => {
   const { username, email, password, role } = req.body;
   
-  const result = usersService.createUser({
+  const result = await usersService.createUser({
     username,
     email,
     password,
@@ -107,14 +108,14 @@ router.post('/', authMiddleware, createUserValidation, handleValidationErrors, (
   }
 
   res.status(201).json(result);
-});
+}));
 
 // PUT /api/users/:id - Update user
-router.put('/:id', authMiddleware, validateIdParam, updateUserValidation, handleValidationErrors, (req, res) => {
+router.put('/:id', authMiddleware, validateIdParam, updateUserValidation, handleValidationErrors, asyncHandler(async (req, res) => {
   const { id } = req.params;
   const { username, email, password, role } = req.body;
   
-  const result = usersService.updateUser(id, {
+  const result = await usersService.updateUser(id, {
     username,
     email,
     password,
@@ -128,18 +129,18 @@ router.put('/:id', authMiddleware, validateIdParam, updateUserValidation, handle
   }
 
   res.json(result);
-});
+}));
 
 // DELETE /api/users/:id - Delete user
-router.delete('/:id', authMiddleware, validateIdParam, (req, res) => {
+router.delete('/:id', authMiddleware, validateIdParam, asyncHandler(async (req, res) => {
   const { id } = req.params;
-  const result = usersService.deleteUser(id);
+  const result = await usersService.deleteUser(id);
 
   if (!result.success) {
     return res.status(404).json(result);
   }
 
   res.json(result);
-});
+}));
 
 module.exports = router;

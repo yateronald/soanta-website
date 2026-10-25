@@ -1,15 +1,15 @@
 const bcrypt = require('bcryptjs');
-const { db } = require('../config/database');
+const { queryOne } = require('../config/database');
 const { signToken, verifyToken } = require('../utils/jwt');
 
 /**
  * Authenticate user with email and password
  * @param {string} email - User email
  * @param {string} password - User password
- * @returns {Object} Result with token and user or error
+ * @returns {Promise<Object>} Result with token and user or error
  */
-function login(email, password) {
-  const user = db.prepare('SELECT * FROM users WHERE email = ?').get(email);
+async function login(email, password) {
+  const user = await queryOne('SELECT * FROM users WHERE email = $1', [email]);
 
   if (!user) {
     return {
@@ -57,9 +57,9 @@ function login(email, password) {
 /**
  * Verify user session from token
  * @param {string} token - JWT token
- * @returns {Object} Result with user or error
+ * @returns {Promise<Object>} Result with user or error
  */
-function verifySession(token) {
+async function verifySession(token) {
   const decoded = verifyToken(token);
 
   if (!decoded) {
@@ -73,7 +73,7 @@ function verifySession(token) {
   }
 
   // Verify user still exists in database
-  const user = db.prepare('SELECT id, username, email, role, createdAt FROM users WHERE id = ?').get(decoded.id);
+  const user = await queryOne('SELECT id, username, email, role, "createdAt" FROM users WHERE id = $1', [decoded.id]);
 
   if (!user) {
     return {

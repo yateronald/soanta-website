@@ -11,17 +11,25 @@ interface LayoutProps {
 
 export function Layout({ children }: LayoutProps) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
-    <div className={`admin-layout ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
-      <Sidebar 
-        isCollapsed={sidebarCollapsed} 
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} 
+    <div
+      className={`admin-layout ${sidebarCollapsed ? 'sidebar-collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}
+    >
+      <Sidebar
+        isCollapsed={sidebarCollapsed}
+        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+        onNavigate={() => setMobileOpen(false)}
       />
-      
+      <div className="sidebar-backdrop" onClick={() => setMobileOpen(false)} aria-hidden="true" />
+
       <div className="admin-main">
-        <Header notificationBell={<NotificationBell />} />
-        
+        <Header
+          notificationBell={<NotificationBell />}
+          onMenuClick={() => setMobileOpen(true)}
+        />
+
         <main className="admin-content">
           {children || <Outlet />}
         </main>

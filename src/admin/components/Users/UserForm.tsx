@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { Modal } from '../shared/Modal';
 import { Eye, EyeOff, Check, X } from 'lucide-react';
 import type { User, CreateUserRequest } from '../../types/admin';
-import './UserForm.css';
 
 interface UserFormProps {
   isOpen: boolean;
@@ -155,35 +154,37 @@ export function UserForm({ isOpen, onClose, onSubmit, user }: UserFormProps) {
       isOpen={isOpen}
       onClose={onClose}
       title={isEditing ? 'Modifier l\'utilisateur' : 'Nouvel utilisateur'}
-      size="xl"
+      size="md"
     >
       <form className="user-form" onSubmit={handleSubmit}>
         {error && <div className="form-error">{error}</div>}
 
-        <div className="form-group">
-          <label htmlFor="username">Nom d'utilisateur</label>
-          <input
-            type="text"
-            id="username"
-            name="username"
-            value={formData.username}
-            onChange={handleChange}
-            placeholder="Entrez le nom d'utilisateur"
-            autoComplete="off"
-          />
-        </div>
+        <div className="form-row">
+          <div className="form-group">
+            <label htmlFor="username">Nom d'utilisateur</label>
+            <input
+              type="text"
+              id="username"
+              name="username"
+              value={formData.username}
+              onChange={handleChange}
+              placeholder="ex. marie.kone"
+              autoComplete="off"
+            />
+          </div>
 
-        <div className="form-group">
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={formData.email}
-            onChange={handleChange}
-            placeholder="Entrez l'email"
-            autoComplete="off"
-          />
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="nom@soanta.com"
+              autoComplete="off"
+            />
+          </div>
         </div>
 
         <div className="form-group">
@@ -206,7 +207,7 @@ export function UserForm({ isOpen, onClose, onSubmit, user }: UserFormProps) {
               onClick={() => setShowPassword(!showPassword)}
               tabIndex={-1}
             >
-              {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
             </button>
           </div>
           
@@ -239,9 +240,9 @@ export function UserForm({ isOpen, onClose, onSubmit, user }: UserFormProps) {
                     className={`requirement ${passed ? 'passed' : ''}`}
                   >
                     {passed ? (
-                      <Check size={14} className="requirement-icon passed" />
+                      <Check size={13} className="requirement-icon passed" />
                     ) : (
-                      <X size={14} className="requirement-icon" />
+                      <X size={13} className="requirement-icon" />
                     )}
                     <span>{req.label}</span>
                   </div>
@@ -272,7 +273,7 @@ export function UserForm({ isOpen, onClose, onSubmit, user }: UserFormProps) {
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 tabIndex={-1}
               >
-                {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                {showConfirmPassword ? <EyeOff size={16} /> : <Eye size={16} />}
               </button>
             </div>
             {formData.confirmPassword && (
@@ -311,7 +312,7 @@ export function UserForm({ isOpen, onClose, onSubmit, user }: UserFormProps) {
             Annuler
           </button>
           <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
-            {isSubmitting ? 'Enregistrement...' : isEditing ? 'Modifier' : 'Créer'}
+            {isSubmitting ? 'Enregistrement…' : isEditing ? 'Enregistrer' : 'Créer le compte'}
           </button>
         </div>
       </form>

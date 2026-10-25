@@ -1,7 +1,24 @@
-const rateLimit = require('express-rate-limit');
+const { rateLimit, ipKeyGenerator } = require('express-rate-limit');
 const helmet = require('helmet');
 const hpp = require('hpp');
 const sanitizeHtml = require('sanitize-html');
+
+/**
+ * Identify the visitor behind Render/Cloudflare proxies.
+ * Cloudflare sets CF-Connecting-IP and overwrites any client-supplied value.
+ */
+function clientKey(req) {
+  const ip = req.headers['cf-connecting-ip'] || req.ip || '';
+  return ipKeyGenerator(ip);
+}
+
+const limiterDefaults = {
+  keyGenerator: clientKey,
+  standardHeaders: true,
+  legacyHeaders: false,
+  // trust proxy is intentionally permissive (see index.js); keys come from clientKey
+  validate: { trustProxy: false, xForwardedForHeader: false },
+};
 
 /**
  * Rate limiter for general API requests
@@ -16,8 +33,7 @@ const generalLimiter = rateLimit({
       message: 'Trop de requêtes, veuillez réessayer plus tard'
     }
   },
-  standardHeaders: true,
-  legacyHeaders: false,
+  ...limiterDefaults,
 });
 
 /**
@@ -33,8 +49,7 @@ const authLimiter = rateLimit({
       message: 'Trop de tentatives de connexion, veuillez réessayer dans 15 minutes'
     }
   },
-  standardHeaders: true,
-  legacyHeaders: false,
+  ...limiterDefaults,
   skipSuccessfulRequests: true, // Don't count successful logins
 });
 
@@ -51,8 +66,7 @@ const formLimiter = rateLimit({
       message: 'Trop de soumissions, veuillez réessayer plus tard'
     }
   },
-  standardHeaders: true,
-  legacyHeaders: false,
+  ...limiterDefaults,
 });
 
 /**

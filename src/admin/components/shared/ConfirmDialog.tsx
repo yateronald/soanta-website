@@ -1,6 +1,5 @@
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, RotateCcw } from 'lucide-react';
 import { Modal } from './Modal';
-import './ConfirmDialog.css';
 
 interface ConfirmDialogProps {
   isOpen: boolean;
@@ -29,7 +28,7 @@ export function ConfirmDialog({
     <Modal isOpen={isOpen} onClose={onClose} size="sm">
       <div className="confirm-dialog">
         <div className={`confirm-icon confirm-icon-${variant}`}>
-          <AlertTriangle size={24} />
+          {variant === 'info' ? <RotateCcw size={18} /> : <AlertTriangle size={18} />}
         </div>
         
         <h3 className="confirm-title">{title}</h3>

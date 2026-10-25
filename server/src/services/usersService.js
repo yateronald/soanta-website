@@ -1,16 +1,38 @@
 const bcrypt = require('bcryptjs');
-const { db } = require('../config/database');
+const { query, queryOne } = require('../config/database');
+
+const PUBLIC_COLUMNS = 'id, username, email, role, "createdAt"';
+
+const USER_NOT_FOUND = {
+  success: false,
+  error: {
+    code: 'NOT_FOUND',
+    message: 'Utilisateur non trouvé'
+  }
+};
+
+const DUPLICATE_EMAIL = {
+  success: false,
+  error: {
+    code: 'DUPLICATE_ENTRY',
+    message: 'Cet email est déjà utilisé'
+  }
+};
+
+const INVALID_ROLE = {
+  success: false,
+  error: {
+    code: 'VALIDATION_ERROR',
+    message: 'Rôle invalide'
+  }
+};
 
 /**
  * Get all users (without passwords)
- * @returns {Object} List of users
+ * @returns {Promise<Object>} List of users
  */
-function getAllUsers() {
-  const users = db.prepare(`
-    SELECT id, username, email, role, createdAt 
-    FROM users 
-    ORDER BY createdAt DESC
-  `).all();
+async function getAllUsers() {
+  const users = await query(`SELECT ${PUBLIC_COLUMNS} FROM users ORDER BY "createdAt" DESC`);
 
   return {
     success: true,
@@ -21,24 +43,11 @@ function getAllUsers() {
 /**
  * Get a single user by ID (without password)
  * @param {number} id - User ID
- * @returns {Object} User or error
+ * @returns {Promise<Object>} User or error
  */
-function getUserById(id) {
-  const user = db.prepare(`
-    SELECT id, username, email, role, createdAt 
-    FROM users 
-    WHERE id = ?
-  `).get(id);
-
-  if (!user) {
-    return {
-      success: false,
-      error: {
-        code: 'NOT_FOUND',
-        message: 'Utilisateur non trouvé'
-      }
-    };
-  }
+async function getUserById(id) {
+  const user = await queryOne(`SELECT ${PUBLIC_COLUMNS} FROM users WHERE id = $1`, [id]);
+  if (!user) return USER_NOT_FOUND;
 
   return {
     success: true,
@@ -49,48 +58,24 @@ function getUserById(id) {
 /**
  * Create a new user
  * @param {Object} data - User data
- * @returns {Object} Created user or error
+ * @returns {Promise<Object>} Created user or error
  */
-function createUser({ username, email, password, role = 'user' }) {
+async function createUser({ username, email, password, role = 'user' }) {
   // Check email uniqueness
-  const existing = db.prepare('SELECT id FROM users WHERE email = ?').get(email);
-  if (existing) {
-    return {
-      success: false,
-      error: {
-        code: 'DUPLICATE_ENTRY',
-        message: 'Cet email est déjà utilisé'
-      }
-    };
-  }
+  const existing = await queryOne('SELECT id FROM users WHERE email = $1', [email]);
+  if (existing) return DUPLICATE_EMAIL;
 
-  // Validate role
-  if (!['admin', 'user'].includes(role)) {
-    return {
-      success: false,
-      error: {
-        code: 'VALIDATION_ERROR',
-        message: 'Rôle invalide'
-      }
-    };
-  }
+  if (!['admin', 'user'].includes(role)) return INVALID_ROLE;
 
-  // Hash password
   const hashedPassword = bcrypt.hashSync(password, 10);
 
-  const stmt = db.prepare(`
-    INSERT INTO users (username, email, password, role)
-    VALUES (?, ?, ?, ?)
-  `);
-
-  const result = stmt.run(username, email, hashedPassword, role);
-
   // Return user without password
-  const created = db.prepare(`
-    SELECT id, username, email, role, createdAt 
-    FROM users 
-    WHERE id = ?
-  `).get(result.lastInsertRowid);
+  const created = await queryOne(
+    `INSERT INTO users (username, email, password, role)
+     VALUES ($1, $2, $3, $4)
+     RETURNING ${PUBLIC_COLUMNS}`,
+    [username, email, hashedPassword, role]
+  );
 
   return {
     success: true,
@@ -102,65 +87,32 @@ function createUser({ username, email, password, role = 'user' }) {
  * Update a user
  * @param {number} id - User ID
  * @param {Object} data - Update data
- * @returns {Object} Updated user or error
+ * @returns {Promise<Object>} Updated user or error
  */
-function updateUser(id, { username, email, password, role }) {
-  const existing = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
-  if (!existing) {
-    return {
-      success: false,
-      error: {
-        code: 'NOT_FOUND',
-        message: 'Utilisateur non trouvé'
-      }
-    };
-  }
+async function updateUser(id, { username, email, password, role }) {
+  const existing = await queryOne('SELECT id, email FROM users WHERE id = $1', [id]);
+  if (!existing) return USER_NOT_FOUND;
 
   // Check email uniqueness if changing email
   if (email && email !== existing.email) {
-    const emailExists = db.prepare('SELECT id FROM users WHERE email = ? AND id != ?').get(email, id);
-    if (emailExists) {
-      return {
-        success: false,
-        error: {
-          code: 'DUPLICATE_ENTRY',
-          message: 'Cet email est déjà utilisé'
-        }
-      };
-    }
+    const emailExists = await queryOne('SELECT id FROM users WHERE email = $1 AND id != $2', [email, id]);
+    if (emailExists) return DUPLICATE_EMAIL;
   }
 
-  // Validate role if provided
-  if (role && !['admin', 'user'].includes(role)) {
-    return {
-      success: false,
-      error: {
-        code: 'VALIDATION_ERROR',
-        message: 'Rôle invalide'
-      }
-    };
-  }
+  if (role && !['admin', 'user'].includes(role)) return INVALID_ROLE;
 
   // Build update query
   const updates = [];
   const params = [];
+  const set = (column, value) => {
+    params.push(value);
+    updates.push(`${column} = $${params.length}`);
+  };
 
-  if (username) {
-    updates.push('username = ?');
-    params.push(username);
-  }
-  if (email) {
-    updates.push('email = ?');
-    params.push(email);
-  }
-  if (password) {
-    updates.push('password = ?');
-    params.push(bcrypt.hashSync(password, 10));
-  }
-  if (role) {
-    updates.push('role = ?');
-    params.push(role);
-  }
+  if (username) set('username', username);
+  if (email) set('email', email);
+  if (password) set('password', bcrypt.hashSync(password, 10));
+  if (role) set('role', role);
 
   if (updates.length === 0) {
     return {
@@ -173,14 +125,10 @@ function updateUser(id, { username, email, password, role }) {
   }
 
   params.push(id);
-  db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...params);
-
-  // Return updated user without password
-  const updated = db.prepare(`
-    SELECT id, username, email, role, createdAt 
-    FROM users 
-    WHERE id = ?
-  `).get(id);
+  const updated = await queryOne(
+    `UPDATE users SET ${updates.join(', ')} WHERE id = $${params.length} RETURNING ${PUBLIC_COLUMNS}`,
+    params
+  );
 
   return {
     success: true,
@@ -191,21 +139,11 @@ function updateUser(id, { username, email, password, role }) {
 /**
  * Delete a user
  * @param {number} id - User ID
- * @returns {Object} Success or error
+ * @returns {Promise<Object>} Success or error
  */
-function deleteUser(id) {
-  const existing = db.prepare('SELECT * FROM users WHERE id = ?').get(id);
-  if (!existing) {
-    return {
-      success: false,
-      error: {
-        code: 'NOT_FOUND',
-        message: 'Utilisateur non trouvé'
-      }
-    };
-  }
-
-  db.prepare('DELETE FROM users WHERE id = ?').run(id);
+async function deleteUser(id) {
+  const removed = await queryOne('DELETE FROM users WHERE id = $1 RETURNING id', [id]);
+  if (!removed) return USER_NOT_FOUND;
 
   return {
     success: true,

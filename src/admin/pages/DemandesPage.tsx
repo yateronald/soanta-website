@@ -5,7 +5,6 @@ import { DemandesList } from '../components/Demandes/DemandesList';
 import { DemandeDetail } from '../components/Demandes/DemandeDetail';
 import { useDemandes } from '../hooks/useDemandes';
 import type { Demande } from '../types/admin';
-import '../styles/admin.css';
 
 export function DemandesPage() {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -62,8 +61,10 @@ export function DemandesPage() {
   return (
     <div className="demandes-page">
       <div className="page-header">
-        <h1>Demandes de contact</h1>
-        <p>Gérez les demandes de partenariat reçues via le formulaire de contact.</p>
+        <div>
+          <h1>Demandes de contact</h1>
+          <p>Demandes de partenariat reçues via le formulaire du site.</p>
+        </div>
       </div>
 
       <StatsCards stats={stats} isLoading={isLoading} />

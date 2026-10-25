@@ -1,6 +1,9 @@
+// Load .env in local development (on Render, variables come from the dashboard)
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
-const { initializeDatabase } = require('./config/database');
+const { initializeDatabase, pool } = require('./config/database');
 const authRoutes = require('./routes/auth');
 const demandesRoutes = require('./routes/demandes');
 const usersRoutes = require('./routes/users');
@@ -16,8 +19,9 @@ const {
 const app = express();
 const PORT = process.env.PORT || 3002;
 
-// Initialize database
-initializeDatabase();
+// Render (and Cloudflare in front of it) proxy every request. Without this, all
+// visitors share the proxy's IP and therefore a single rate-limit bucket.
+app.set('trust proxy', true);
 
 // Security middleware (apply before other middleware)
 app.use(helmetConfig);
@@ -65,9 +69,15 @@ app.use('/api/auth', authRoutes);
 app.use('/api/demandes', demandesRoutes);
 app.use('/api/users', usersRoutes);
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+// Health check endpoint (also confirms the database is reachable)
+app.get('/api/health', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ status: 'ok', database: 'ok', timestamp: new Date().toISOString() });
+  } catch (err) {
+    console.error('Health check: database unreachable:', err.message);
+    res.status(503).json({ status: 'error', database: 'unreachable', timestamp: new Date().toISOString() });
+  }
 });
 
 // 404 handler
@@ -108,11 +118,18 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
+// Start server once the database schema is ready
 if (require.main === module) {
-  app.listen(PORT, () => {
-    console.log(`Server running on http://localhost:${PORT}`);
-  });
+  initializeDatabase()
+    .then(() => {
+      app.listen(PORT, () => {
+        console.log(`Server running on http://localhost:${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.error('Database initialization failed:', err.message);
+      process.exit(1);
+    });
 }
 
 module.exports = app;

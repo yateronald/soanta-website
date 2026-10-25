@@ -3,8 +3,7 @@ import { RefreshCw, RotateCcw, Trash2 } from 'lucide-react';
 import api from '../services/api';
 import { ConfirmDialog } from '../components/shared/ConfirmDialog';
 import type { Demande } from '../types/admin';
-import '../styles/admin.css';
-import './DeletedRecordsPage.css';
+import { formatDate, formatTime, initials } from '../utils/format';
 
 export function DeletedRecordsPage() {
   const [deletedDemandes, setDeletedDemandes] = useState<Demande[]>([]);
@@ -66,31 +65,22 @@ export function DeletedRecordsPage() {
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
-  };
-
   return (
     <div className="deleted-records-page">
       <div className="page-header">
-        <h1>Corbeille</h1>
-        <p>Consultez et restaurez les demandes supprimées.</p>
+        <div>
+          <h1>Corbeille</h1>
+          <p>Restaurez une demande supprimée ou effacez-la définitivement.</p>
+        </div>
       </div>
 
       <div className="deleted-list">
         <div className="deleted-toolbar">
           <div className="toolbar-info">
-            <Trash2 size={18} />
-            <span>{deletedDemandes.length} élément(s) supprimé(s)</span>
+            <strong>{deletedDemandes.length}</strong> demande{deletedDemandes.length > 1 ? 's' : ''} dans la corbeille
           </div>
-          <button className="toolbar-btn" onClick={fetchDeletedDemandes} title="Actualiser">
-            <RefreshCw size={18} className={isLoading ? 'spinning' : ''} />
+          <button className="toolbar-btn" onClick={fetchDeletedDemandes} title="Actualiser" aria-label="Actualiser">
+            <RefreshCw size={15} className={isLoading ? 'spinning' : ''} />
           </button>
         </div>
 
@@ -98,52 +88,68 @@ export function DeletedRecordsPage() {
           <table className="deleted-table">
             <thead>
               <tr>
-                <th>Nom</th>
-                <th>Email</th>
+                <th>Contact</th>
                 <th>Téléphone</th>
                 <th>Entreprise</th>
-                <th>Date de suppression</th>
-                <th>Actions</th>
+                <th>Supprimée le</th>
+                <th className="th-actions">Actions</th>
               </tr>
             </thead>
             <tbody>
               {isLoading ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <tr key={i} className="skeleton-row">
-                    {Array.from({ length: 6 }).map((_, j) => (
+                    {Array.from({ length: 5 }).map((_, j) => (
                       <td key={j}><div className="skeleton-cell" /></td>
                     ))}
                   </tr>
                 ))
               ) : deletedDemandes.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="empty-state">
-                    <Trash2 size={48} className="empty-icon" />
-                    <p>La corbeille est vide</p>
+                  <td colSpan={5} className="empty-state">
+                    <div className="empty-state__inner">
+                      <span className="empty-state__icon"><Trash2 size={20} /></span>
+                      <span className="empty-state__title">La corbeille est vide</span>
+                      <span className="empty-state__text">Les demandes supprimées apparaîtront ici.</span>
+                    </div>
                   </td>
                 </tr>
               ) : (
                 deletedDemandes.map((demande) => (
                   <tr key={demande.id}>
-                    <td className="cell-name">{demande.nom}</td>
-                    <td className="cell-email">{demande.email}</td>
-                    <td className="cell-phone">{demande.telephone || '-'}</td>
-                    <td>{demande.entreprise || '-'}</td>
-                    <td className="cell-date">{formatDate(demande.updatedAt)}</td>
+                    <td>
+                      <div className="cell-person">
+                        <span className="user-avatar" aria-hidden="true">{initials(demande.nom)}</span>
+                        <div className="cell-person__text">
+                          <span className="cell-person__name">{demande.nom}</span>
+                          <span className="cell-person__sub">{demande.email}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className={`cell-phone ${demande.telephone ? '' : 'cell-muted'}`}>
+                      {demande.telephone || '—'}
+                    </td>
+                    <td className={demande.entreprise ? '' : 'cell-muted'}>{demande.entreprise || '—'}</td>
+                    <td className="cell-date">
+                      {formatDate(demande.updatedAt)}
+                      <small>{formatTime(demande.updatedAt)}</small>
+                    </td>
                     <td className="cell-actions">
                       <button
                         className="action-btn action-btn--restore"
                         onClick={() => setRestoreTarget(demande)}
                         title="Restaurer"
+                        aria-label={`Restaurer la demande de ${demande.nom}`}
                       >
-                        <RotateCcw size={16} />
+                        <RotateCcw size={15} />
                       </button>
                       <button
                         className="action-btn action-btn--delete"
                         onClick={() => setDeleteTarget(demande)}
                         title="Supprimer définitivement"
+                        aria-label={`Supprimer définitivement la demande de ${demande.nom}`}
                       >
-                        <Trash2 size={16} />
+                        <Trash2 size={15} />
                       </button>
                     </td>
                   </tr>

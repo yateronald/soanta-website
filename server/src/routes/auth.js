@@ -1,4 +1,5 @@
 const express = require('express');
+const asyncHandler = require('../utils/asyncHandler');
 const { body, validationResult } = require('express-validator');
 const authService = require('../services/authService');
 const authMiddleware = require('../middleware/auth');
@@ -20,7 +21,7 @@ router.post('/login', authLimiter, [
     .withMessage('Le mot de passe est requis')
     .isLength({ min: 1, max: 128 })
     .withMessage('Mot de passe invalide')
-], (req, res) => {
+], asyncHandler(async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return res.status(400).json({
@@ -37,36 +38,36 @@ router.post('/login', authLimiter, [
   }
 
   const { email, password } = req.body;
-  const result = authService.login(email, password);
+  const result = await authService.login(email, password);
 
   if (!result.success) {
     return res.status(401).json(result);
   }
 
   res.json(result);
-});
+}));
 
 // POST /api/auth/logout
-router.post('/logout', authMiddleware, (req, res) => {
+router.post('/logout', authMiddleware, asyncHandler(async (req, res) => {
   // JWT is stateless, so logout is handled client-side by removing the token
   res.json({
     success: true,
     message: 'Déconnexion réussie'
   });
-});
+}));
 
 // GET /api/auth/me
-router.get('/me', authMiddleware, (req, res) => {
+router.get('/me', authMiddleware, asyncHandler(async (req, res) => {
   const authHeader = req.headers.authorization;
   const token = authHeader.split(' ')[1];
   
-  const result = authService.verifySession(token);
+  const result = await authService.verifySession(token);
 
   if (!result.success) {
     return res.status(401).json(result);
   }
 
   res.json(result);
-});
+}));
 
 module.exports = router;
