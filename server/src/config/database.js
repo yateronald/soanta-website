@@ -50,20 +50,25 @@ function initializeDatabase() {
 }
 
 function seedDefaultAdmin() {
-  // Create admin user with username 'admin' and password 'Admin@123'
-  const existingAdmin = db.prepare('SELECT id FROM users WHERE username = ?').get('admin');
-  
+  // Admin credentials can be overridden with ADMIN_EMAIL / ADMIN_PASSWORD (e.g. on Render)
+  const email = (process.env.ADMIN_EMAIL || 'exportinfos@soanta.com').toLowerCase();
+  const password = process.env.ADMIN_PASSWORD || 'Admin@123';
+  const hashedPassword = bcrypt.hashSync(password, 10);
+
+  const existingAdmin =
+    db.prepare('SELECT id FROM users WHERE email = ?').get(email) ||
+    db.prepare('SELECT id FROM users WHERE username = ?').get('admin');
+
   if (!existingAdmin) {
-    const hashedPassword = bcrypt.hashSync('Admin@123', 10);
     db.prepare(`
       INSERT INTO users (username, email, password, role)
       VALUES (?, ?, ?, ?)
-    `).run('admin', 'admin@soanta.com', hashedPassword, 'admin');
-    console.log('Default admin user created: username=admin, password=Admin@123');
+    `).run('admin', email, hashedPassword, 'admin');
+    console.log(`Default admin user created: ${email}`);
   } else {
-    // Update existing admin password to the new one
-    const hashedPassword = bcrypt.hashSync('Admin@123', 10);
-    db.prepare(`UPDATE users SET password = ? WHERE username = ?`).run(hashedPassword, 'admin');
+    // Keep the admin account in sync with the configured email and password
+    db.prepare(`UPDATE users SET email = ?, password = ?, role = 'admin' WHERE id = ?`)
+      .run(email, hashedPassword, existingAdmin.id);
   }
 }
 
