@@ -22,7 +22,7 @@
   margin-bottom: 1.25rem;
   font-family: var(--font-family-heading);
   font-size: clamp(2rem, 1.5rem + 1.8vw, 3rem);
-  font-weight: 400;
+  font-weight: var(--fw-heading);
   line-height: 1.08;
   letter-spacing: -0.02em;
 }
@@ -85,7 +85,7 @@
 .contact-form__form-title {
   font-family: var(--font-family-heading);
   font-size: var(--fs-h3);
-  font-weight: 400;
+  font-weight: var(--fw-heading);
 }
 
 .contact-form__form-note {
@@ -299,7 +299,7 @@
   margin-bottom: 0.75rem;
   font-family: var(--font-family-heading);
   font-size: 1.6rem;
-  font-weight: 400;
+  font-weight: var(--fw-heading);
 }
 
 .contact-form__modal-text {

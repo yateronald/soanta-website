@@ -33,10 +33,9 @@
   margin-bottom: 2rem;
   font-family: var(--font-family-heading);
   font-size: var(--fs-h2);
-  font-weight: 400;
+  font-weight: var(--fw-heading);
   line-height: 1.08;
   letter-spacing: -0.02em;
-  font-variation-settings: 'opsz' 96;
   max-width: 16ch;
 }
 
@@ -47,7 +46,7 @@
   font-family: var(--font-family-heading);
   font-size: clamp(1.15rem, 1rem + 0.5vw, 1.4rem);
   font-style: italic;
-  font-weight: 300;
+  font-weight: var(--fw-heading);
   line-height: 1.5;
   color: var(--text-primary);
 }

@@ -9,11 +9,10 @@
 .section-title__heading {
   font-family: var(--font-family-heading);
   font-size: var(--fs-h2);
-  font-weight: 400;
+  font-weight: var(--fw-heading);
   line-height: 1.08;
   letter-spacing: -0.02em;
   color: var(--text-primary);
-  font-variation-settings: 'opsz' 96;
   max-width: 18ch;
 }
 

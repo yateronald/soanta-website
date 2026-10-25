@@ -39,16 +39,19 @@
   --line-light: rgba(246, 241, 233, 0.14);
 
   /* Typographie */
-  --font-family-primary: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-family-heading: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-family-primary: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-family-heading: 'Cormorant Garamond', Georgia, 'Times New Roman', serif;
 
   --fs-eyebrow: 0.75rem;
   --fs-small: 0.875rem;
   --fs-body: 1rem;
   --fs-lead: clamp(1.05rem, 0.98rem + 0.3vw, 1.2rem);
-  --fs-h3: clamp(1.35rem, 1.2rem + 0.5vw, 1.6rem);
-  --fs-h2: clamp(2rem, 1.5rem + 2vw, 3.25rem);
-  --fs-h1: clamp(2.6rem, 1.6rem + 4.4vw, 5.5rem);
+  --fs-h3: clamp(1.55rem, 1.35rem + 0.6vw, 1.85rem);
+  --fs-h2: clamp(2.3rem, 1.7rem + 2.3vw, 3.75rem);
+  --fs-h1: clamp(3rem, 1.8rem + 5vw, 6.25rem);
+
+  /* Cormorant reads thin below 500 */
+  --fw-heading: 500;
 
   /* Espacements */
   --spacing-xs: 0.25rem;

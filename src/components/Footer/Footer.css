@@ -23,7 +23,7 @@
   font-family: var(--font-family-heading);
   font-size: 1.25rem;
   font-style: italic;
-  font-weight: 300;
+  font-weight: var(--fw-heading);
   color: var(--text-light);
 }
 
